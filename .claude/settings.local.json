@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm -v)",
+      "Bash(mkdir -p brand_assets)",
+      "Bash(mv \"tawelstyle asset red.PNG\" brand_assets/wordmark-bordeaux.png)",
+      "Bash(mv \"tawel-style-brand-asset-sheet.pdf\" brand_assets/brand-asset-sheet.pdf)",
+      "Bash(npm init *)",
+      "Bash(npm install *)",
+      "Bash(curl -s -o /dev/null -w \"product.html: %{http_code}\\\\n\" http://localhost:8420/product.html?id=ivory-shirt-dress)",
+      "Bash(curl -s -o /dev/null -w \"anime.umd.min.js: %{http_code}\\\\n\" http://localhost:8420/assets/vendor/anime.umd.min.js)",
+      "Bash(curl -s -o /dev/null -w \"product.html: %{http_code}\\\\n\" \"http://localhost:8420/product.html?id=ivory-shirt-dress\")",
+      "Bash(curl -s -o /dev/null -w \"anime.umd.min.js: %{http_code}\\\\n\" \"http://localhost:8420/assets/vendor/anime.umd.min.js\")",
+      "Bash(curl -s -o /dev/null -w \"status: %{http_code}\\\\n\" http://localhost:8420/index.html)",
+      "WebSearch",
+      "WebFetch(domain:unsplash.com)",
+      "Bash(grep -n \"data-plate=\\\\\"\\\\${\" index.html shop.html product.html cart.html about.html)",
+      "Bash(mkdir -p assets/img/products assets/img/lifestyle)",
+      "Bash(cp \"pictures/black tanktop flat lay.png\" \"assets/img/products/wordmark-tank-black.png\")",
+      "Bash(cp \"pictures/white tanktop flat lay .png\" \"assets/img/products/wordmark-tank-white.png\")",
+      "Bash(cp \"pictures/burgundy polo flatlay front.png\" \"assets/img/products/rugby-polo-burgundy.png\")",
+      "Bash(cp \"pictures/3d flatlay green.png\" \"assets/img/products/rugby-polo-green.png\")",
+      "Bash(node --check assets/products.js)",
+      "Bash(node --check assets/main.js)",
+      "Bash(gh auth *)",
+      "Bash(gh --version)",
+      "Bash(git init *)",
+      "Bash(git add *)"
+    ]
+  }
+}

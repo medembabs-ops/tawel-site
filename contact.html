@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Contact — Tawel Style</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="assets/tailwind-config.js"></script>
+<link rel="stylesheet" href="assets/style.css" />
+</head>
+<body class="bg-ivory text-ink font-body">
+
+<div id="site-header"></div>
+
+<main class="pt-40 pb-28 px-6 md:px-10 min-h-[60vh]">
+  <div class="max-w-5xl mx-auto grid md:grid-cols-2 gap-16">
+
+    <div>
+      <p class="label text-[11px] text-bordeaux mb-5">Contact</p>
+      <h1 class="font-display text-[32px] md:text-[40px] leading-tight mb-8">Client Care</h1>
+      <p class="text-[15px] leading-[1.8] text-ink/80 max-w-[46ch] mb-10">
+        For orders, fit questions, or press enquiries, write to us directly.
+        We reply within two working days.
+      </p>
+
+      <dl class="space-y-6 text-[14px]">
+        <div>
+          <dt class="label text-[10px] text-ink/50 mb-1">Email</dt>
+          <dd><a href="mailto:hello@tawelstyle.com" class="underline-grow hover:text-bordeaux transition-colors">hello@tawelstyle.com</a></dd>
+        </div>
+        <div>
+          <dt class="label text-[10px] text-ink/50 mb-1">Shipping &amp; returns</dt>
+          <dd class="text-ink/70">Complimentary returns within 14 days of delivery.</dd>
+        </div>
+      </dl>
+    </div>
+
+    <form id="contact-form" class="space-y-6">
+      <div>
+        <label class="label text-[10px] text-ink/60 block mb-2" for="c-name">Name</label>
+        <input required id="c-name" type="text" class="w-full border border-blush focus:border-bordeaux outline-none px-4 py-3 text-[14px] bg-white" />
+      </div>
+      <div>
+        <label class="label text-[10px] text-ink/60 block mb-2" for="c-email">Email</label>
+        <input required id="c-email" type="email" class="w-full border border-blush focus:border-bordeaux outline-none px-4 py-3 text-[14px] bg-white" />
+      </div>
+      <div>
+        <label class="label text-[10px] text-ink/60 block mb-2" for="c-message">Message</label>
+        <textarea required id="c-message" rows="5" class="w-full border border-blush focus:border-bordeaux outline-none px-4 py-3 text-[14px] bg-white"></textarea>
+      </div>
+      <button type="submit" class="label text-[11px] bg-bordeaux text-ivory px-8 py-4 hover:bg-bordeaux-dark transition-colors w-full md:w-auto">
+        Send message
+      </button>
+      <p id="contact-sent" class="hidden text-[13px] text-bordeaux">Message recorded locally — this form isn't yet connected to an inbox.</p>
+    </form>
+
+  </div>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="assets/products.js"></script>
+<script src="assets/main.js"></script>
+<script>
+  renderHeader('contact.html');
+  renderFooter();
+
+  document.getElementById('contact-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    document.getElementById('contact-sent').classList.remove('hidden');
+    e.target.reset();
+  });
+</script>
+</body>
+</html>

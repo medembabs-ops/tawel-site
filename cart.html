@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Your Cart — Tawel Style</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="assets/tailwind-config.js"></script>
+<link rel="stylesheet" href="assets/style.css" />
+</head>
+<body class="bg-ivory text-ink font-body">
+
+<div id="site-header"></div>
+
+<main class="pt-32 pb-28 px-6 md:px-10 min-h-[60vh]">
+  <div class="max-w-4xl mx-auto">
+    <p class="label text-[11px] text-bordeaux mb-4">Cart</p>
+    <h1 class="font-display text-[32px] md:text-[40px] leading-tight mb-12">Your Selection</h1>
+
+    <div id="cart-items" class="divide-y divide-blush border-y border-blush"></div>
+
+    <div id="cart-empty" class="hidden py-20 text-center">
+      <p class="text-[15px] text-ink/70 mb-6">Your cart is empty.</p>
+      <a href="shop.html" class="label text-[11px] bg-bordeaux text-ivory px-8 py-4 inline-block hover:bg-bordeaux-dark transition-colors">Shop the collection</a>
+    </div>
+
+    <div id="cart-summary" class="hidden flex flex-col items-end mt-10 gap-6">
+      <div class="flex justify-between w-full max-w-xs text-[15px]">
+        <span class="text-ink/70">Subtotal</span>
+        <span id="subtotal-value" class="font-medium"></span>
+      </div>
+      <p class="text-[12px] text-ink/50 max-w-xs text-right">Shipping and taxes calculated at checkout.</p>
+      <a href="checkout.html" class="label text-[11px] bg-bordeaux text-ivory px-8 py-4 hover:bg-bordeaux-dark transition-colors">Proceed to checkout</a>
+    </div>
+  </div>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="assets/products.js"></script>
+<script src="assets/main.js"></script>
+<script>
+  renderHeader('cart.html');
+  renderFooter();
+
+  function renderCart() {
+    const lines = cartLines();
+    const itemsWrap = document.getElementById('cart-items');
+    const empty = document.getElementById('cart-empty');
+    const summary = document.getElementById('cart-summary');
+    itemsWrap.innerHTML = '';
+
+    if (lines.length === 0) {
+      empty.classList.remove('hidden');
+      summary.classList.add('hidden');
+      itemsWrap.classList.add('hidden');
+      return;
+    }
+
+    itemsWrap.classList.remove('hidden');
+    empty.classList.add('hidden');
+    summary.classList.remove('hidden');
+
+    lines.forEach((line) => {
+      itemsWrap.insertAdjacentHTML('beforeend', `
+        <div class="flex gap-6 py-8">
+          <a href="product.html?id=${line.product.id}" class="block flex-shrink-0">${mediaMarkup(line.product, 'w-24 h-28')}</a>
+          <div class="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <a href="product.html?id=${line.product.id}" class="text-[15px] hover:text-bordeaux transition-colors">${line.product.name}</a>
+              <p class="text-[13px] text-ink/60 mt-1">Size ${line.size}</p>
+              <p class="text-[13px] text-ink/60">${formatPrice(line.product.price)}</p>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="flex items-center gap-3">
+                <button data-action="decrease" data-index="${line.index}" class="w-7 h-7 border border-blush hover:border-bordeaux transition-colors text-[13px]" aria-label="Decrease quantity">–</button>
+                <span class="w-5 text-center text-[13px]">${line.qty}</span>
+                <button data-action="increase" data-index="${line.index}" class="w-7 h-7 border border-blush hover:border-bordeaux transition-colors text-[13px]" aria-label="Increase quantity">+</button>
+              </div>
+              <button data-action="remove" data-index="${line.index}" class="label text-[10px] text-ink/50 hover:text-bordeaux transition-colors">Remove</button>
+            </div>
+          </div>
+        </div>
+      `);
+    });
+
+    document.getElementById('subtotal-value').textContent = formatPrice(cartSubtotal());
+
+    itemsWrap.querySelectorAll('button[data-action]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const index = Number(btn.getAttribute('data-index'));
+        const action = btn.getAttribute('data-action');
+        const cart = getCart();
+        if (action === 'remove') {
+          removeFromCart(index);
+        } else if (action === 'increase') {
+          updateQty(index, cart[index].qty + 1);
+        } else if (action === 'decrease') {
+          updateQty(index, cart[index].qty - 1);
+        }
+        renderCart();
+      });
+    });
+  }
+
+  renderCart();
+</script>
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title id="page-title">Product — Tawel Style</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="assets/tailwind-config.js"></script>
+<link rel="stylesheet" href="assets/style.css" />
+</head>
+<body class="bg-ivory text-ink font-body">
+
+<div id="site-header"></div>
+
+<main class="pt-32 pb-28 px-6 md:px-10">
+  <div id="product-root" class="max-w-7xl mx-auto"></div>
+
+  <div id="not-found" class="hidden max-w-xl mx-auto text-center py-20">
+    <p class="label text-[11px] text-bordeaux mb-4">Not found</p>
+    <h1 class="font-display text-[28px] mb-6">We couldn't find that piece.</h1>
+    <a href="shop.html" class="label text-[11px] underline-grow text-bordeaux">Back to the collection</a>
+  </div>
+
+  <section id="related-section" class="max-w-7xl mx-auto mt-28 hidden">
+    <div class="flex items-end justify-between mb-10 border-b border-blush pb-4">
+      <h2 class="label text-[11px] text-bordeaux">You may also like</h2>
+    </div>
+    <div id="related-grid" class="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-12"></div>
+  </section>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="assets/vendor/anime.umd.min.js"></script>
+<script src="assets/products.js"></script>
+<script src="assets/main.js"></script>
+<script>
+  renderHeader('shop.html');
+  renderFooter();
+
+  const params = new URLSearchParams(location.search);
+  const product = getProductById(params.get('id'));
+  const root = document.getElementById('product-root');
+
+  if (!product) {
+    document.getElementById('not-found').classList.remove('hidden');
+  } else {
+    document.getElementById('page-title').textContent = `${product.name} — Tawel Style`;
+
+    root.innerHTML = `
+      <div class="grid md:grid-cols-2 gap-12 md:gap-20">
+        <div id="hero-plate">${mediaMarkup(product, 'aspect-[4/5]')}</div>
+        <div class="md:py-6">
+          <p class="label text-[11px] text-bordeaux mb-4">${product.category}</p>
+          <h1 class="font-display text-[30px] md:text-[38px] leading-tight mb-4">${product.name}</h1>
+          <p class="text-[17px] text-ink/80 mb-8">${formatPrice(product.price)}</p>
+          <p class="text-[15px] leading-[1.8] text-ink/80 max-w-[48ch] mb-10">${product.description}</p>
+
+          <form id="add-form">
+            <p class="label text-[10px] text-ink/60 mb-3">Size</p>
+            <div id="size-options" class="flex flex-wrap gap-2 mb-8"></div>
+
+            <p class="label text-[10px] text-ink/60 mb-3">Quantity</p>
+            <div class="flex items-center gap-4 mb-10">
+              <button type="button" id="qty-minus" class="w-8 h-8 border border-blush hover:border-bordeaux transition-colors" aria-label="Decrease quantity">–</button>
+              <span id="qty-value" class="w-6 text-center text-[14px]">1</span>
+              <button type="button" id="qty-plus" class="w-8 h-8 border border-blush hover:border-bordeaux transition-colors" aria-label="Increase quantity">+</button>
+            </div>
+
+            <button type="submit" class="label text-[11px] bg-bordeaux text-ivory px-8 py-4 hover:bg-bordeaux-dark transition-colors w-full md:w-auto">
+              Add to cart
+            </button>
+            <p id="added-msg" class="hidden text-[13px] text-bordeaux mt-4">Added to your cart. <a href="cart.html" class="underline-grow">View cart →</a></p>
+          </form>
+        </div>
+      </div>
+    `;
+
+    const sizeWrap = document.getElementById('size-options');
+    let selectedSize = product.sizes[0];
+    product.sizes.forEach((size, i) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = size;
+      btn.className = `label text-[11px] px-4 py-2 border transition-colors ${i === 0 ? 'border-bordeaux text-bordeaux' : 'border-blush text-ink/70 hover:border-bordeaux'}`;
+      btn.addEventListener('click', () => {
+        selectedSize = size;
+        [...sizeWrap.children].forEach((c) => c.className = 'label text-[11px] px-4 py-2 border border-blush text-ink/70 hover:border-bordeaux transition-colors');
+        btn.className = 'label text-[11px] px-4 py-2 border border-bordeaux text-bordeaux transition-colors';
+      });
+      sizeWrap.appendChild(btn);
+    });
+
+    let qty = 1;
+    const qtyValue = document.getElementById('qty-value');
+    document.getElementById('qty-minus').addEventListener('click', () => {
+      qty = Math.max(1, qty - 1);
+      qtyValue.textContent = qty;
+    });
+    document.getElementById('qty-plus').addEventListener('click', () => {
+      qty += 1;
+      qtyValue.textContent = qty;
+    });
+
+    document.getElementById('add-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      addToCart(product.id, selectedSize, qty);
+      document.getElementById('added-msg').classList.remove('hidden');
+    });
+
+    const related = PRODUCTS.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4);
+    if (related.length) {
+      document.getElementById('related-section').classList.remove('hidden');
+      const relatedGrid = document.getElementById('related-grid');
+      related.forEach((p) => {
+        relatedGrid.insertAdjacentHTML('beforeend', `
+          <a href="product.html?id=${p.id}" class="group block">
+            ${mediaMarkup(p, 'aspect-[4/5] mb-4')}
+            <p class="text-[13px] leading-snug mb-1 group-hover:text-bordeaux transition-colors">${p.name}</p>
+            <p class="text-[13px] text-ink/60">${formatPrice(p.price)}</p>
+          </a>
+        `);
+      });
+    }
+  }
+
+  initPlates();
+
+  if (product && window.anime) {
+    const heroPaths = document.querySelectorAll('#hero-plate svg path');
+    if (heroPaths.length) {
+      const drawables = anime.svg.createDrawable(heroPaths);
+      anime.animate(drawables, {
+        draw: ['0 0', '0 1'],
+        ease: 'inOutQuad',
+        duration: 1400,
+        delay: anime.stagger(200),
+      });
+    }
+  }
+</script>
+</body>
+</html>

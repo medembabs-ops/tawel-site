@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Checkout — Tawel Style</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="assets/tailwind-config.js"></script>
+<link rel="stylesheet" href="assets/style.css" />
+</head>
+<body class="bg-ivory text-ink font-body">
+
+<div id="site-header"></div>
+
+<main class="pt-32 pb-28 px-6 md:px-10 min-h-[60vh]">
+  <div class="max-w-5xl mx-auto">
+
+    <div id="checkout-view">
+      <p class="label text-[11px] text-bordeaux mb-4">Checkout</p>
+      <h1 class="font-display text-[32px] md:text-[40px] leading-tight mb-4">Shipping Details</h1>
+      <p class="text-[13px] text-ink/60 max-w-[52ch] mb-12">
+        This is a demonstration checkout — no payment is processed and no order is
+        sent anywhere. Connecting real payment (e.g. Stripe) requires a backend
+        and is not wired up yet.
+      </p>
+
+      <div class="grid md:grid-cols-[1.3fr_1fr] gap-16">
+        <form id="checkout-form" class="space-y-6">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="label text-[10px] text-ink/60 block mb-2" for="first-name">First name</label>
+              <input required id="first-name" name="first-name" type="text" class="w-full border border-blush focus:border-bordeaux outline-none px-4 py-3 text-[14px] bg-white" />
+            </div>
+            <div>
+              <label class="label text-[10px] text-ink/60 block mb-2" for="last-name">Last name</label>
+              <input required id="last-name" name="last-name" type="text" class="w-full border border-blush focus:border-bordeaux outline-none px-4 py-3 text-[14px] bg-white" />
+            </div>
+          </div>
+          <div>
+            <label class="label text-[10px] text-ink/60 block mb-2" for="email">Email</label>
+            <input required id="email" name="email" type="email" class="w-full border border-blush focus:border-bordeaux outline-none px-4 py-3 text-[14px] bg-white" />
+          </div>
+          <div>
+            <label class="label text-[10px] text-ink/60 block mb-2" for="address">Address</label>
+            <input required id="address" name="address" type="text" class="w-full border border-blush focus:border-bordeaux outline-none px-4 py-3 text-[14px] bg-white" />
+          </div>
+          <div class="grid grid-cols-3 gap-4">
+            <div>
+              <label class="label text-[10px] text-ink/60 block mb-2" for="city">City</label>
+              <input required id="city" name="city" type="text" class="w-full border border-blush focus:border-bordeaux outline-none px-4 py-3 text-[14px] bg-white" />
+            </div>
+            <div>
+              <label class="label text-[10px] text-ink/60 block mb-2" for="postcode">Postcode</label>
+              <input required id="postcode" name="postcode" type="text" class="w-full border border-blush focus:border-bordeaux outline-none px-4 py-3 text-[14px] bg-white" />
+            </div>
+            <div>
+              <label class="label text-[10px] text-ink/60 block mb-2" for="country">Country</label>
+              <input required id="country" name="country" type="text" class="w-full border border-blush focus:border-bordeaux outline-none px-4 py-3 text-[14px] bg-white" />
+            </div>
+          </div>
+
+          <button type="submit" class="label text-[11px] bg-bordeaux text-ivory px-8 py-4 hover:bg-bordeaux-dark transition-colors w-full">
+            Place order
+          </button>
+        </form>
+
+        <div>
+          <p class="label text-[10px] text-ink/60 mb-4">Order summary</p>
+          <div id="summary-items" class="divide-y divide-blush border-y border-blush mb-6"></div>
+          <div class="flex justify-between text-[15px]">
+            <span class="text-ink/70">Total</span>
+            <span id="summary-total" class="font-medium"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="confirmation-view" class="hidden text-center py-16 max-w-lg mx-auto">
+      <p class="label text-[11px] text-bordeaux mb-4">Order received</p>
+      <h1 class="font-display text-[32px] leading-tight mb-6">Thank you<span id="confirm-name"></span>.</h1>
+      <p class="text-[15px] text-ink/70 leading-relaxed mb-10">
+        This confirmation is illustrative — the order was recorded in your
+        browser only. No email was sent and no payment was taken.
+      </p>
+      <a href="shop.html" class="label text-[11px] underline-grow text-bordeaux">Continue shopping</a>
+    </div>
+
+  </div>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="assets/products.js"></script>
+<script src="assets/main.js"></script>
+<script>
+  renderHeader('cart.html');
+  renderFooter();
+
+  const lines = cartLines();
+  if (lines.length === 0) {
+    location.href = 'cart.html';
+  }
+
+  const summaryItems = document.getElementById('summary-items');
+  lines.forEach((line) => {
+    summaryItems.insertAdjacentHTML('beforeend', `
+      <div class="flex justify-between py-3 text-[13px]">
+        <span class="text-ink/70">${line.product.name} · ${line.size} × ${line.qty}</span>
+        <span>${formatPrice(line.product.price * line.qty)}</span>
+      </div>
+    `);
+  });
+  document.getElementById('summary-total').textContent = formatPrice(cartSubtotal());
+
+  document.getElementById('checkout-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const firstName = document.getElementById('first-name').value;
+    document.getElementById('confirm-name').textContent = firstName ? `, ${firstName}` : '';
+    document.getElementById('checkout-view').classList.add('hidden');
+    document.getElementById('confirmation-view').classList.remove('hidden');
+    saveCart([]);
+  });
+</script>
+</body>
+</html>

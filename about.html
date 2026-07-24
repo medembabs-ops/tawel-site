@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>About — Tawel Style</title>
+<meta name="description" content="The Tawel Style house: a single signature, a four-colour palette, and tailoring built around both." />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="assets/tailwind-config.js"></script>
+<link rel="stylesheet" href="assets/style.css" />
+</head>
+<body class="bg-ivory text-ink font-body">
+
+<div id="site-header"></div>
+
+<main>
+
+  <section class="pt-40 pb-20 px-6 md:px-10">
+    <div class="max-w-3xl mx-auto text-center">
+      <p class="label text-[11px] text-bordeaux mb-6">About</p>
+      <h1 class="font-display text-[36px] md:text-[48px] leading-tight">The house was built around a signature before it was built around a collection.</h1>
+    </div>
+  </section>
+
+  <section class="bg-white">
+    <div class="max-w-7xl mx-auto grid md:grid-cols-2">
+      <div class="plate aspect-[4/5] md:aspect-auto order-2 md:order-1" data-plate="c"></div>
+      <div class="flex flex-col justify-center px-8 md:px-16 py-20 order-1 md:order-2">
+        <p class="label text-[11px] text-bordeaux mb-5">Origin</p>
+        <p class="text-[15px] leading-[1.9] text-ink/80 max-w-[48ch]">
+          Tawel Style began with a single piece of handwriting — a name, written
+          once, in Bordeaux ink, and never redrawn. Everything the house makes
+          since has been an attempt to earn a place next to that mark: cut with
+          the same restraint, finished with the same patience.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="px-6 md:px-10 py-24">
+    <div class="max-w-3xl mx-auto text-center">
+      <div class="w-10 h-px bg-blush mx-auto mb-10"></div>
+      <p class="font-display italic text-[24px] md:text-[30px] leading-[1.6]">
+        Four colours. One hand. No second script.
+      </p>
+      <div class="w-10 h-px bg-blush mx-auto mt-10"></div>
+    </div>
+  </section>
+
+  <section class="bg-bordeaux text-ivory">
+    <div class="max-w-5xl mx-auto px-6 md:px-10 py-24 grid md:grid-cols-4 gap-10 text-center">
+      <div>
+        <div class="w-8 h-8 rounded-full bg-bordeaux-dark border border-ivory/30 mx-auto mb-4" style="background:#63010F"></div>
+        <p class="label text-[10px] mb-1">Bordeaux</p>
+        <p class="text-[11px] text-blush">#63010F</p>
+      </div>
+      <div>
+        <div class="w-8 h-8 rounded-full mx-auto mb-4" style="background:#1A1315"></div>
+        <p class="label text-[10px] mb-1">Ink</p>
+        <p class="text-[11px] text-blush">#1A1315</p>
+      </div>
+      <div>
+        <div class="w-8 h-8 rounded-full mx-auto mb-4 border border-ivory/30" style="background:#F6F2EC"></div>
+        <p class="label text-[10px] mb-1">Ivory</p>
+        <p class="text-[11px] text-blush">#F6F2EC</p>
+      </div>
+      <div>
+        <div class="w-8 h-8 rounded-full mx-auto mb-4" style="background:#CAAAAA"></div>
+        <p class="label text-[10px] mb-1">Blush</p>
+        <p class="text-[11px] text-blush">#CAAAAA</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="px-6 md:px-10 py-24 text-center">
+    <a href="shop.html" class="label text-[11px] bg-ink text-ivory px-8 py-4 inline-block hover:bg-bordeaux transition-colors">Shop the collection</a>
+  </section>
+
+</main>
+
+<div id="site-footer"></div>
+
+<script src="assets/products.js"></script>
+<script src="assets/main.js"></script>
+<script>
+  renderHeader('about.html');
+  renderFooter();
+  initPlates();
+</script>
+</body>
+</html>

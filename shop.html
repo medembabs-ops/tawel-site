@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Shop — Tawel Style</title>
+<meta name="description" content="The full Tawel Style collection: outerwear, dresses, tailoring and accessories." />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="assets/tailwind-config.js"></script>
+<link rel="stylesheet" href="assets/style.css" />
+</head>
+<body class="bg-ivory text-ink font-body">
+
+<div id="site-header"></div>
+
+<main class="pt-32 pb-28 px-6 md:px-10">
+  <div class="max-w-7xl mx-auto">
+
+    <div class="mb-12 max-w-xl">
+      <p class="label text-[11px] text-bordeaux mb-4">Shop</p>
+      <h1 class="font-display text-[34px] md:text-[44px] leading-tight">The Collection</h1>
+    </div>
+
+    <div id="category-tabs" class="flex flex-wrap gap-x-8 gap-y-3 border-b border-blush pb-5 mb-12"></div>
+
+    <div id="product-grid" class="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-14"></div>
+
+    <p id="empty-state" class="hidden text-[14px] text-ink/60 py-16 text-center">
+      Nothing here yet in this category. <a href="shop.html" class="underline-grow text-bordeaux">View all pieces</a>.
+    </p>
+
+  </div>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="assets/products.js"></script>
+<script src="assets/main.js"></script>
+<script>
+  renderHeader('shop.html');
+  renderFooter();
+
+  const params = new URLSearchParams(location.search);
+  const activeCategory = params.get('category') || 'All';
+  const searchTerm = (params.get('search') || '').trim().toLowerCase();
+  const categories = ['All', ...new Set(PRODUCTS.map((p) => p.category))];
+
+  const tabs = document.getElementById('category-tabs');
+  categories.forEach((cat) => {
+    const isActive = cat === activeCategory;
+    const href = cat === 'All' ? 'shop.html' : `shop.html?category=${encodeURIComponent(cat)}`;
+    tabs.insertAdjacentHTML('beforeend', `
+      <a href="${href}" class="label text-[11px] pb-1 border-b ${isActive ? 'text-bordeaux border-bordeaux' : 'text-ink/60 border-transparent hover:text-bordeaux'} transition-colors">${cat}</a>
+    `);
+  });
+
+  const grid = document.getElementById('product-grid');
+  let filtered = activeCategory === 'All' ? PRODUCTS : PRODUCTS.filter((p) => p.category === activeCategory);
+  if (searchTerm) {
+    filtered = filtered.filter((p) => p.name.toLowerCase().includes(searchTerm) || p.description.toLowerCase().includes(searchTerm));
+  }
+
+  if (searchTerm) {
+    document.querySelector('h1').textContent = `Results for "${params.get('search')}"`;
+  }
+
+  if (filtered.length === 0) {
+    document.getElementById('empty-state').classList.remove('hidden');
+  }
+
+  filtered.forEach((p) => {
+    grid.insertAdjacentHTML('beforeend', `
+      <a href="product.html?id=${p.id}" class="group block">
+        ${mediaMarkup(p, 'aspect-[4/5] mb-4')}
+        <p class="label text-[10px] text-blush mb-1">${p.category}</p>
+        <p class="text-[14px] leading-snug mb-1 group-hover:text-bordeaux transition-colors">${p.name}</p>
+        <p class="text-[13px] text-ink/60">${formatPrice(p.price)}</p>
+      </a>
+    `);
+  });
+  initPlates();
+</script>
+</body>
+</html>

@@ -16,7 +16,7 @@
     <div>
       <p class="label text-[11px] text-bordeaux mb-5">Contact</p>
       <h1 class="font-display text-[32px] md:text-[40px] leading-tight mb-8">Client Care</h1>
-      <p class="text-[15px] leading-[1.8] text-ink/80 max-w-[46ch] mb-10">
+      <p class="text-[15px] leading-[1.8] text-ink/80 max-w-[46ch] mb-10" data-content-key="contact.intro_paragraph">
         For orders, fit questions, or press enquiries, write to us directly.
         We reply within two working days.
       </p>
@@ -24,11 +24,11 @@
       <dl class="space-y-6 text-[14px]">
         <div>
           <dt class="label text-[10px] text-ink/50 mb-1">Email</dt>
-          <dd><a href="mailto:hello@tawelstyle.com" class="underline-grow hover:text-bordeaux transition-colors">hello@tawelstyle.com</a></dd>
+          <dd><a href="mailto:hello@tawelstyle.com" id="contact-email-link" class="underline-grow hover:text-bordeaux transition-colors" data-content-key="contact.email">hello@tawelstyle.com</a></dd>
         </div>
         <div>
           <dt class="label text-[10px] text-ink/50 mb-1">Shipping &amp; returns</dt>
-          <dd class="text-ink/70">Complimentary returns within 14 days of delivery.</dd>
+          <dd class="text-ink/70" data-content-key="contact.shipping_note">Complimentary returns within 14 days of delivery.</dd>
         </div>
       </dl>
     </div>
@@ -57,12 +57,20 @@
 
 <div id="site-footer"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/supabase-client.js"></script>
 <script src="assets/products.js"></script>
+<script src="assets/site-content.js"></script>
 <script src="assets/main.js"></script>
 <script>
   renderFooter();
   renderIconDock({ centered: true });
   renderHeaderDivider();
+
+  (async () => {
+    await loadSiteContent();
+    applySiteContent();
+  })();
 
   document.getElementById('contact-form').addEventListener('submit', (e) => {
     e.preventDefault();

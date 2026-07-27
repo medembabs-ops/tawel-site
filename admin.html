@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Admin — Tawel Style</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="assets/tailwind-config.js"></script>
+<link rel="stylesheet" href="assets/style.css" />
+</head>
+<body class="bg-ivory text-ink font-body">
+
+<main class="min-h-screen px-6 md:px-10 py-12">
+  <div class="max-w-5xl mx-auto">
+
+    <div class="flex items-center justify-between mb-10 pb-6 border-b border-blush">
+      <div>
+        <p class="label text-[11px] text-bordeaux mb-1">Tawel Style</p>
+        <h1 class="font-display text-[26px]">Site Admin</h1>
+      </div>
+      <button id="logout-btn" class="hidden label text-[11px] border border-blush px-4 py-2 hover:border-bordeaux hover:text-bordeaux transition-colors">Log out</button>
+    </div>
+
+    <!-- Login -->
+    <section id="login-view" class="max-w-sm">
+      <form id="login-form" class="space-y-5">
+        <div>
+          <label class="label text-[10px] text-ink/60 block mb-2" for="login-email">Email</label>
+          <input required id="login-email" type="email" autocomplete="username" class="w-full border border-blush focus:border-bordeaux outline-none px-4 py-3 text-[14px] bg-white" />
+        </div>
+        <div>
+          <label class="label text-[10px] text-ink/60 block mb-2" for="login-password">Password</label>
+          <input required id="login-password" type="password" autocomplete="current-password" class="w-full border border-blush focus:border-bordeaux outline-none px-4 py-3 text-[14px] bg-white" />
+        </div>
+        <button type="submit" class="label text-[11px] bg-bordeaux text-ivory px-8 py-4 hover:bg-bordeaux-dark transition-colors w-full">Log in</button>
+        <p id="login-error" class="hidden text-[13px] text-bordeaux"></p>
+      </form>
+    </section>
+
+    <!-- Admin panels -->
+    <section id="admin-view" class="hidden space-y-16">
+
+      <div>
+        <div class="flex items-end justify-between mb-6 pb-3 border-b border-blush">
+          <h2 class="label text-[11px] text-bordeaux">Products</h2>
+          <button id="add-product-btn" class="label text-[11px] underline-grow hover:text-bordeaux transition-colors">+ Add product</button>
+        </div>
+        <div id="products-list" class="space-y-4"></div>
+        <p id="products-status" class="text-[13px] text-ink/60 mt-4"></p>
+      </div>
+
+      <div>
+        <div class="mb-6 pb-3 border-b border-blush">
+          <h2 class="label text-[11px] text-bordeaux">Site copy</h2>
+        </div>
+        <form id="content-form" class="space-y-6"></form>
+        <button id="save-content-btn" type="submit" form="content-form" class="label text-[11px] bg-bordeaux text-ivory px-8 py-4 hover:bg-bordeaux-dark transition-colors mt-6">Save site copy</button>
+        <p id="content-status" class="text-[13px] text-ink/60 mt-4"></p>
+      </div>
+
+    </section>
+
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/supabase-client.js"></script>
+<script src="assets/admin.js"></script>
+</body>
+</html>

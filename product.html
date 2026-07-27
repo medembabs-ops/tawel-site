@@ -30,12 +30,18 @@
 <div id="site-footer"></div>
 
 <script src="assets/vendor/anime.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/supabase-client.js"></script>
 <script src="assets/products.js"></script>
+<script src="assets/site-content.js"></script>
 <script src="assets/main.js"></script>
 <script>
   renderFooter();
   renderIconDock({ centered: true });
   renderHeaderDivider();
+
+  (async () => {
+  await loadProducts();
 
   const params = new URLSearchParams(location.search);
   const product = getProductById(params.get('id'));
@@ -137,6 +143,7 @@
       });
     }
   }
+  })();
 </script>
 </body>
 </html>

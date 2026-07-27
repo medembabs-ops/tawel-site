@@ -39,7 +39,7 @@
         alt="Tawel Style"
         class="wordmark-reversed wordmark-reveal w-[78vw] max-w-[560px] h-auto mb-8"
       />
-      <p class="label text-[11px] md:text-xs text-blush">To All We Ever Loved</p>
+      <p class="label text-[11px] md:text-xs text-blush" data-content-key="home.hero_tagline">To All We Ever Loved</p>
     </div>
   </section>
 
@@ -47,9 +47,9 @@
   <section class="grain">
     <div class="max-w-3xl mx-auto px-6 py-28 md:py-36 text-center">
       <div class="w-10 h-px bg-blush mx-auto mb-10"></div>
-      <p class="font-display italic text-[26px] md:text-[34px] leading-[1.5] text-ink">
-        We do not chase seasons. We finish sentences —
-        in wool, in silk, in one continuous line of thread.
+      <p class="font-display italic text-[26px] md:text-[34px] leading-[1.5] text-ink" data-content-key="home.manifesto">
+        We do not bend to the moment we create
+        for every chapter love will write
       </p>
       <div class="w-10 h-px bg-blush mx-auto mt-10"></div>
     </div>
@@ -91,8 +91,8 @@
       </div>
       <div class="flex flex-col justify-center px-8 md:px-16 py-20">
         <p class="label text-[11px] text-bordeaux mb-5">THE ATELIER</p>
-        <h2 class="font-display text-[32px] md:text-[40px] leading-tight mb-6">Curated for the life you love</h2>
-        <p class="text-[15px] leading-[1.8] text-ink/80 max-w-[46ch] mb-8">
+        <h2 class="font-display text-[32px] md:text-[40px] leading-tight mb-6" data-content-key="home.atelier_heading">Curated for the life you love</h2>
+        <p class="text-[15px] leading-[1.8] text-ink/80 max-w-[46ch] mb-8" data-content-key="home.atelier_paragraph">
           Tawel Style keeps a small palette on purpose — Bordeaux, Ivory, Ink, Blush —
           and asks every piece to earn its place inside it. Nothing is
           added that the signature didn't already say.
@@ -106,24 +106,32 @@
 
 <div id="site-footer"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/supabase-client.js"></script>
 <script src="assets/products.js"></script>
+<script src="assets/site-content.js"></script>
 <script src="assets/main.js"></script>
 <script>
   renderFooter();
-
-  const arrivalsTrack = document.getElementById('arrivals-track');
-  [...PRODUCTS, ...PRODUCTS].forEach((p) => {
-    arrivalsTrack.insertAdjacentHTML('beforeend', `
-      <a href="product.html?id=${p.id}" class="infinite-slider-item group block">
-        <img src="${p.image}" alt="${p.name}" loading="lazy" />
-        <p class="text-[12px] mt-2 leading-snug group-hover:text-bordeaux transition-colors">${p.name}</p>
-        <p class="text-[12px] text-ink/60">${formatPrice(p.price)}</p>
-      </a>
-    `);
-  });
-  initPlates();
-  initInfiniteSliders();
   renderIconDock();
+
+  (async () => {
+    await Promise.all([loadProducts(), loadSiteContent()]);
+    applySiteContent();
+
+    const arrivalsTrack = document.getElementById('arrivals-track');
+    [...PRODUCTS, ...PRODUCTS].forEach((p) => {
+      arrivalsTrack.insertAdjacentHTML('beforeend', `
+        <a href="product.html?id=${p.id}" class="infinite-slider-item group block">
+          <img src="${p.image}" alt="${p.name}" loading="lazy" />
+          <p class="text-[12px] mt-2 leading-snug group-hover:text-bordeaux transition-colors">${p.name}</p>
+          <p class="text-[12px] text-ink/60">${formatPrice(p.price)}</p>
+        </a>
+      `);
+    });
+    initPlates();
+    initInfiniteSliders();
+  })();
 </script>
 </body>
 </html>

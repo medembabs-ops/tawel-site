@@ -32,52 +32,59 @@
 
 <div id="site-footer"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/supabase-client.js"></script>
 <script src="assets/products.js"></script>
+<script src="assets/site-content.js"></script>
 <script src="assets/main.js"></script>
 <script>
   renderFooter();
   renderIconDock({ centered: true });
   renderHeaderDivider();
 
-  const params = new URLSearchParams(location.search);
-  const activeCategory = params.get('category') || 'All';
-  const searchTerm = (params.get('search') || '').trim().toLowerCase();
-  const categories = ['All', ...new Set(PRODUCTS.map((p) => p.category))];
+  (async () => {
+    await loadProducts();
 
-  const tabs = document.getElementById('category-tabs');
-  categories.forEach((cat) => {
-    const isActive = cat === activeCategory;
-    const href = cat === 'All' ? 'shop.html' : `shop.html?category=${encodeURIComponent(cat)}`;
-    tabs.insertAdjacentHTML('beforeend', `
-      <a href="${href}" class="label text-[11px] pb-1 border-b ${isActive ? 'text-bordeaux border-bordeaux' : 'text-ink/60 border-transparent hover:text-bordeaux'} transition-colors">${cat}</a>
-    `);
-  });
+    const params = new URLSearchParams(location.search);
+    const activeCategory = params.get('category') || 'All';
+    const searchTerm = (params.get('search') || '').trim().toLowerCase();
+    const categories = ['All', ...new Set(PRODUCTS.map((p) => p.category))];
 
-  const grid = document.getElementById('product-grid');
-  let filtered = activeCategory === 'All' ? PRODUCTS : PRODUCTS.filter((p) => p.category === activeCategory);
-  if (searchTerm) {
-    filtered = filtered.filter((p) => p.name.toLowerCase().includes(searchTerm) || p.description.toLowerCase().includes(searchTerm));
-  }
+    const tabs = document.getElementById('category-tabs');
+    categories.forEach((cat) => {
+      const isActive = cat === activeCategory;
+      const href = cat === 'All' ? 'shop.html' : `shop.html?category=${encodeURIComponent(cat)}`;
+      tabs.insertAdjacentHTML('beforeend', `
+        <a href="${href}" class="label text-[11px] pb-1 border-b ${isActive ? 'text-bordeaux border-bordeaux' : 'text-ink/60 border-transparent hover:text-bordeaux'} transition-colors">${cat}</a>
+      `);
+    });
 
-  if (searchTerm) {
-    document.querySelector('h1').textContent = `Results for "${params.get('search')}"`;
-  }
+    const grid = document.getElementById('product-grid');
+    let filtered = activeCategory === 'All' ? PRODUCTS : PRODUCTS.filter((p) => p.category === activeCategory);
+    if (searchTerm) {
+      filtered = filtered.filter((p) => p.name.toLowerCase().includes(searchTerm) || p.description.toLowerCase().includes(searchTerm));
+    }
 
-  if (filtered.length === 0) {
-    document.getElementById('empty-state').classList.remove('hidden');
-  }
+    if (searchTerm) {
+      document.querySelector('h1').textContent = `Results for "${params.get('search')}"`;
+    }
 
-  filtered.forEach((p) => {
-    grid.insertAdjacentHTML('beforeend', `
-      <a href="product.html?id=${p.id}" class="group block">
-        ${mediaMarkup(p, 'aspect-[4/5] mb-4')}
-        <p class="label text-[10px] text-blush mb-1">${p.category}</p>
-        <p class="text-[14px] leading-snug mb-1 group-hover:text-bordeaux transition-colors">${p.name}</p>
-        <p class="text-[13px] text-ink/60">${formatPrice(p.price)}</p>
-      </a>
-    `);
-  });
-  initPlates();
+    if (filtered.length === 0) {
+      document.getElementById('empty-state').classList.remove('hidden');
+    }
+
+    filtered.forEach((p) => {
+      grid.insertAdjacentHTML('beforeend', `
+        <a href="product.html?id=${p.id}" class="group block">
+          ${mediaMarkup(p, 'aspect-[4/5] mb-4')}
+          <p class="label text-[10px] text-blush mb-1">${p.category}</p>
+          <p class="text-[14px] leading-snug mb-1 group-hover:text-bordeaux transition-colors">${p.name}</p>
+          <p class="text-[13px] text-ink/60">${formatPrice(p.price)}</p>
+        </a>
+      `);
+    });
+    initPlates();
+  })();
 </script>
 </body>
 </html>

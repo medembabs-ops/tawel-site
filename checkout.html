@@ -88,6 +88,8 @@
 
 <div id="site-footer"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/supabase-client.js"></script>
 <script src="assets/products.js"></script>
 <script src="assets/main.js"></script>
 <script>
@@ -95,30 +97,34 @@
   renderIconDock({ centered: true });
   renderHeaderDivider();
 
-  const lines = cartLines();
-  if (lines.length === 0) {
-    location.href = 'cart.html';
-  }
+  (async () => {
+    await loadProducts();
 
-  const summaryItems = document.getElementById('summary-items');
-  lines.forEach((line) => {
-    summaryItems.insertAdjacentHTML('beforeend', `
-      <div class="flex justify-between py-3 text-[13px]">
-        <span class="text-ink/70">${line.product.name} · ${line.size} × ${line.qty}</span>
-        <span>${formatPrice(line.product.price * line.qty)}</span>
-      </div>
-    `);
-  });
-  document.getElementById('summary-total').textContent = formatPrice(cartSubtotal());
+    const lines = cartLines();
+    if (lines.length === 0) {
+      location.href = 'cart.html';
+    }
 
-  document.getElementById('checkout-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const firstName = document.getElementById('first-name').value;
-    document.getElementById('confirm-name').textContent = firstName ? `, ${firstName}` : '';
-    document.getElementById('checkout-view').classList.add('hidden');
-    document.getElementById('confirmation-view').classList.remove('hidden');
-    saveCart([]);
-  });
+    const summaryItems = document.getElementById('summary-items');
+    lines.forEach((line) => {
+      summaryItems.insertAdjacentHTML('beforeend', `
+        <div class="flex justify-between py-3 text-[13px]">
+          <span class="text-ink/70">${line.product.name} · ${line.size} × ${line.qty}</span>
+          <span>${formatPrice(line.product.price * line.qty)}</span>
+        </div>
+      `);
+    });
+    document.getElementById('summary-total').textContent = formatPrice(cartSubtotal());
+
+    document.getElementById('checkout-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const firstName = document.getElementById('first-name').value;
+      document.getElementById('confirm-name').textContent = firstName ? `, ${firstName}` : '';
+      document.getElementById('checkout-view').classList.add('hidden');
+      document.getElementById('confirmation-view').classList.remove('hidden');
+      saveCart([]);
+    });
+  })();
 </script>
 </body>
 </html>

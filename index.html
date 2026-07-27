@@ -3,6 +3,16 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script>
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  window.addEventListener('pageshow', function () {
+    var root = document.documentElement;
+    var prev = root.style.scrollBehavior;
+    root.style.scrollBehavior = 'auto';
+    window.scrollTo(0, 0);
+    root.style.scrollBehavior = prev;
+  });
+</script>
 <title>Tawel Style — One signature, cut into cloth</title>
 <meta name="description" content="Tawel Style: tailoring and eveningwear cut from a single house signature — Bordeaux ink on Ivory cloth." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -11,8 +21,6 @@
 <link rel="stylesheet" href="assets/style.css" />
 </head>
 <body class="bg-ivory text-ink font-body">
-
-<div id="site-header"></div>
 
 <main>
 
@@ -23,6 +31,8 @@
         radial-gradient(90% 70% at 85% 95%, rgba(99,1,15,0.55) 0%, rgba(26,19,21,0) 60%);"></div>
     <div class="grain absolute inset-0 opacity-60"></div>
 
+    <img src="brand_assets/gold-star.png" alt="" class="absolute top-6 left-14 md:top-8 md:left-16 z-20 h-20 w-auto" />
+
     <div class="relative z-10 flex flex-col items-center px-6 text-center">
       <img
         src="brand_assets/wordmark-bordeaux.png"
@@ -31,15 +41,10 @@
       />
       <p class="label text-[11px] md:text-xs text-blush">To All We Ever Loved</p>
     </div>
-
-    <a href="#manifesto" class="absolute bottom-9 label text-[10px] text-blush/80 hover:text-ivory transition-colors flex flex-col items-center gap-2">
-      Scroll
-      <span class="block w-px h-8 bg-blush/60"></span>
-    </a>
   </section>
 
   <!-- Manifesto -->
-  <section id="manifesto" class="grain">
+  <section class="grain">
     <div class="max-w-3xl mx-auto px-6 py-28 md:py-36 text-center">
       <div class="w-10 h-px bg-blush mx-auto mb-10"></div>
       <p class="font-display italic text-[26px] md:text-[34px] leading-[1.5] text-ink">
@@ -51,15 +56,15 @@
   </section>
 
   <!-- Featured -->
-  <section class="px-6 md:px-10 pb-28">
-    <div class="max-w-7xl mx-auto">
+  <section class="pb-28">
+    <div class="max-w-7xl mx-auto px-6 md:px-10">
       <div class="flex items-end justify-between mb-10 border-b border-blush pb-4">
-        <h2 class="label text-[11px] text-bordeaux">New Arrivals</h2>
+        <h2 class="label text-[11px] text-bordeaux">DEBUT</h2>
         <a href="shop.html" class="label text-[11px] underline-grow hover:text-bordeaux transition-colors">View all</a>
       </div>
-      <div class="infinite-slider" data-speed="34" data-hover-speed="9">
-        <div class="infinite-slider-track" id="arrivals-track"></div>
-      </div>
+    </div>
+    <div class="infinite-slider w-screen ml-[calc(50%-50vw)]" data-speed="34" data-hover-speed="9">
+      <div class="infinite-slider-track" id="arrivals-track"></div>
     </div>
   </section>
 
@@ -67,8 +72,8 @@
   <section class="scroll-card-section px-6 md:px-10 pb-28">
     <div class="scroll-card-stage">
       <div class="scroll-card-title">
-        <p class="label text-[11px] text-bordeaux mb-4">The Atelier</p>
-        <h2 class="font-display text-[30px] md:text-[46px] leading-tight">Cut slowly.<br class="hidden md:block" /> Worn for years.</h2>
+        <p class="label text-[11px] text-bordeaux mb-4">THE VAULT</p>
+        <h2 class="font-display text-[30px] md:text-[46px] leading-tight">For The beautiful Life</h2>
       </div>
       <div class="scroll-card">
         <div class="scroll-card-inner media-photo">
@@ -85,14 +90,14 @@
         <img src="assets/img/lifestyle/well-beloved-back.png" alt="Well Beloved rugby polo, worn" loading="lazy" />
       </div>
       <div class="flex flex-col justify-center px-8 md:px-16 py-20">
-        <p class="label text-[11px] text-bordeaux mb-5">The House</p>
-        <h2 class="font-display text-[32px] md:text-[40px] leading-tight mb-6">Built around one hand, one ink, one line.</h2>
+        <p class="label text-[11px] text-bordeaux mb-5">THE ATELIER</p>
+        <h2 class="font-display text-[32px] md:text-[40px] leading-tight mb-6">Curated for the life you love</h2>
         <p class="text-[15px] leading-[1.8] text-ink/80 max-w-[46ch] mb-8">
           Tawel Style keeps a small palette on purpose — Bordeaux, Ivory, Ink, Blush —
           and asks every piece to earn its place inside it. Nothing is
           added that the signature didn't already say.
         </p>
-        <a href="about.html" class="label text-[11px] underline-grow w-fit hover:text-bordeaux transition-colors">Discover the house</a>
+        <a href="about.html" class="label text-[11px] underline-grow w-fit hover:text-bordeaux transition-colors">Discover the atelier</a>
       </div>
     </div>
   </section>
@@ -104,7 +109,6 @@
 <script src="assets/products.js"></script>
 <script src="assets/main.js"></script>
 <script>
-  renderHeader('index.html');
   renderFooter();
 
   const arrivalsTrack = document.getElementById('arrivals-track');
@@ -119,6 +123,7 @@
   });
   initPlates();
   initInfiniteSliders();
+  renderIconDock();
 </script>
 </body>
 </html>

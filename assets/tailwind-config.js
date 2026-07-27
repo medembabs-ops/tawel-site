@@ -10,6 +10,7 @@ tailwind.config = {
         ink: '#1A1315',
         ivory: '#F6F2EC',
         blush: '#CAAAAA',
+        gold: '#E99F00',
       },
       fontFamily: {
         display: ['"Playfair Display"', 'serif'],

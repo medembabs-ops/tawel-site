@@ -10,8 +10,6 @@
 </head>
 <body class="bg-ivory text-ink font-body">
 
-<div id="site-header"></div>
-
 <main class="pt-32 pb-28 px-6 md:px-10 min-h-[60vh]">
   <div class="max-w-5xl mx-auto">
 
@@ -93,8 +91,9 @@
 <script src="assets/products.js"></script>
 <script src="assets/main.js"></script>
 <script>
-  renderHeader('cart.html');
   renderFooter();
+  renderIconDock({ centered: true });
+  renderHeaderDivider();
 
   const lines = cartLines();
   if (lines.length === 0) {

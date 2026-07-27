@@ -10,8 +10,6 @@
 </head>
 <body class="bg-ivory text-ink font-body">
 
-<div id="site-header"></div>
-
 <main class="pt-32 pb-28 px-6 md:px-10">
   <div id="product-root" class="max-w-7xl mx-auto"></div>
 
@@ -35,8 +33,9 @@
 <script src="assets/products.js"></script>
 <script src="assets/main.js"></script>
 <script>
-  renderHeader('shop.html');
   renderFooter();
+  renderIconDock({ centered: true });
+  renderHeaderDivider();
 
   const params = new URLSearchParams(location.search);
   const product = getProductById(params.get('id'));

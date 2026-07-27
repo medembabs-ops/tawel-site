@@ -67,6 +67,81 @@ function updateCartBadge() {
   });
 }
 
+// Fixed home/search/account/cart icon dock, shown top-right on every page.
+// Pass { centered: true } on pages with the bordeaux header bar so the
+// icons align on the same line as the star asset centered inside it.
+function renderIconDock(options = {}) {
+  if (document.getElementById('icon-dock')) return;
+  // top-10 (2.5rem = 40px) is the vertical midpoint of the 80px (h-20)
+  // header bar — a fixed offset, not a viewport-relative top-1/2, since
+  // this element is itself position:fixed (percentages there resolve
+  // against the viewport, not the bar).
+  const vertical = options.centered ? 'top-10 -translate-y-1/2' : 'top-6 md:top-8';
+  document.body.insertAdjacentHTML('beforeend', `
+    <div id="icon-dock" class="fixed ${vertical} right-6 md:right-8 z-40 flex flex-row gap-1 text-gold">
+      <a href="index.html" aria-label="Home" class="flex p-[8.4px] rounded opacity-80 hover:opacity-100 hover:bg-gold/10 focus-visible:opacity-100 focus-visible:bg-gold/10 active:opacity-60 transition-colors">
+        <svg class="icon h-[21px] w-[21px]" stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+          <path d="M946.5 505L560.1 118.8l-25.9-25.9a31.5 31.5 0 0 0-44.4 0L77.5 505a63.9 63.9 0 0 0-18.8 46c.4 35.2 29.7 63.3 64.9 63.3h42.5V940h691.8V614.3h43.4c17.1 0 33.2-6.7 45.3-18.8a63.6 63.6 0 0 0 18.7-45.3c0-17-6.7-33.1-18.8-45.2zM568 868H456V664h112v204zm217.9-325.7V868H632V640c0-22.1-17.9-40-40-40H432c-22.1 0-40 17.9-40 40v228H238.1V542.3h-96l370-369.7 23.1 23.1L882 542.3h-96.1z"></path>
+        </svg>
+      </a>
+
+      <div class="relative">
+        <button type="button" id="icon-dock-search-toggle" aria-label="Search" aria-expanded="false" aria-controls="icon-dock-search-form" class="flex p-[8.4px] rounded opacity-80 hover:opacity-100 hover:bg-gold/10 focus-visible:opacity-100 focus-visible:bg-gold/10 active:opacity-60 transition-colors">
+          <svg class="icon h-[21px] w-[21px]" stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </button>
+        <form id="icon-dock-search-form" class="hidden absolute right-0 top-full mt-2 w-56">
+          <label for="icon-dock-search-input" class="sr-only">Search products</label>
+          <input id="icon-dock-search-input" type="text" name="q" placeholder="Search" autocomplete="off" class="w-full bg-ink/80 border border-gold/40 text-ivory placeholder-blush text-[12px] tracking-wide px-3 py-2 outline-none focus:border-gold transition-colors" />
+        </form>
+      </div>
+
+      <button type="button" aria-label="Account" class="flex p-[8.4px] rounded opacity-60 hover:opacity-80 hover:bg-gold/10 focus-visible:opacity-80 focus-visible:bg-gold/10 active:opacity-50 transition-colors">
+        <svg class="icon h-[21px] w-[21px]" stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2.5a5.5 5.5 0 0 1 3.096 10.047 9.005 9.005 0 0 1 5.9 8.181.75.75 0 1 1-1.499.044 7.5 7.5 0 0 0-14.993 0 .75.75 0 0 1-1.5-.045 9.005 9.005 0 0 1 5.9-8.18A5.5 5.5 0 0 1 12 2.5ZM8 8a4 4 0 1 0 8 0 4 4 0 0 0-8 0Z"></path>
+        </svg>
+      </button>
+
+      <a href="cart.html" aria-label="View cart" class="relative flex p-[8.4px] rounded opacity-80 hover:opacity-100 hover:bg-gold/10 focus-visible:opacity-100 focus-visible:bg-gold/10 active:opacity-60 transition-colors">
+        <svg class="icon h-[21px] w-[21px]" stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="9" cy="21" r="1"></circle>
+          <circle cx="20" cy="21" r="1"></circle>
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+        </svg>
+        <span data-cart-count class="hidden absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-[9px] rounded-full bg-gold text-ink">0</span>
+      </a>
+    </div>
+  `);
+
+  const searchToggle = document.getElementById('icon-dock-search-toggle');
+  const searchForm = document.getElementById('icon-dock-search-form');
+  if (searchToggle && searchForm) {
+    searchToggle.addEventListener('click', () => {
+      const isHidden = searchForm.classList.toggle('hidden');
+      searchToggle.setAttribute('aria-expanded', String(!isHidden));
+      if (!isHidden) searchForm.querySelector('#icon-dock-search-input').focus();
+    });
+    searchForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const q = searchForm.querySelector('#icon-dock-search-input').value.trim();
+      location.href = q ? `shop.html?search=${encodeURIComponent(q)}` : 'shop.html';
+    });
+  }
+  updateCartBadge();
+}
+
+// Fixed header bar behind the icon dock, matching the footer's bordeaux
+// so the page reads as bracketed by the same colour top and bottom.
+function renderHeaderDivider() {
+  if (document.getElementById('header-divider')) return;
+  document.body.insertAdjacentHTML('beforeend', `
+    <div id="header-divider" class="fixed top-0 inset-x-0 z-30 h-20 bg-bordeaux">
+      <img src="brand_assets/gold-star.png" alt="" class="absolute top-1/2 left-14 md:left-16 -translate-y-1/2 h-20 w-auto" />
+    </div>
+  `);
+}
+
 // Simple original line-art marks used as stand-ins until real product
 // photography is supplied. Each is a minimal single-path garment glyph.
 const PLATE_ICONS = {
@@ -96,73 +171,6 @@ function initPlates() {
     el.innerHTML = `<svg viewBox="0 0 120 120" class="w-1/3 h-1/3 mx-auto my-auto absolute inset-0" fill="none" stroke="#63010F" stroke-linecap="round" stroke-linejoin="round">${glyph}</svg><span class="plate-tag">Plate pending</span>`;
     el.setAttribute('data-plate-rendered', 'true');
   });
-}
-
-function renderHeader(active) {
-  const mount = document.getElementById('site-header');
-  if (!mount) return;
-  const links = [
-    ['index.html', 'Home'],
-    ['shop.html', 'Shop'],
-    ['about.html', 'About'],
-    ['contact.html', 'Contact'],
-  ];
-  const navLinks = links
-    .map(([href, label]) => {
-      const isActive = active === href;
-      return `<a href="${href}" class="label text-[11px] underline-grow ${isActive ? 'text-bordeaux' : 'text-ink'} hover:text-bordeaux transition-colors">${label}</a>`;
-    })
-    .join('');
-  mount.innerHTML = `
-    <header class="fixed top-0 inset-x-0 z-40 bg-ivory/90 backdrop-blur-sm border-b border-blush">
-      <div class="max-w-7xl mx-auto flex items-center justify-between px-6 md:px-10 h-20">
-        <a href="index.html" aria-label="Tawel Style — home">
-          <img src="brand_assets/wordmark-bordeaux.png" alt="Tawel Style" class="h-7 w-auto" />
-        </a>
-        <nav class="hidden md:flex items-center gap-10">${navLinks}</nav>
-        <div class="flex items-center gap-5">
-          <form id="search-form" class="input-container hidden lg:block">
-            <label for="search-input" class="sr-only">Search products</label>
-            <input id="search-input" name="q" type="text" placeholder="Search" class="input" autocomplete="off" />
-            <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1A1315" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="7"/>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            </svg>
-          </form>
-          <a href="cart.html" class="relative label text-[11px] text-ink hover:text-bordeaux transition-colors" aria-label="View cart">
-            Cart
-            <span data-cart-count class="hidden ml-1 inline-flex items-center justify-center w-4 h-4 text-[9px] rounded-full bg-bordeaux text-ivory align-top">0</span>
-          </a>
-          <button id="nav-toggle" class="md:hidden label text-[11px]" aria-expanded="false" aria-controls="mobile-nav">Menu</button>
-        </div>
-      </div>
-      <nav id="mobile-nav" class="md:hidden hidden flex-col px-6 pb-6 gap-4 bg-ivory border-t border-blush">${navLinks}</nav>
-    </header>
-  `;
-
-  const searchForm = document.getElementById('search-form');
-  if (searchForm) {
-    const params = new URLSearchParams(location.search);
-    const currentSearch = params.get('search');
-    if (currentSearch) searchForm.querySelector('#search-input').value = currentSearch;
-    searchForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const q = searchForm.querySelector('#search-input').value.trim();
-      location.href = q ? `shop.html?search=${encodeURIComponent(q)}` : 'shop.html';
-    });
-  }
-
-  const toggle = document.getElementById('nav-toggle');
-  const mobileNav = document.getElementById('mobile-nav');
-  if (toggle && mobileNav) {
-    toggle.addEventListener('click', () => {
-      const isOpen = !mobileNav.classList.contains('hidden');
-      mobileNav.classList.toggle('hidden');
-      mobileNav.classList.toggle('flex');
-      toggle.setAttribute('aria-expanded', String(!isOpen));
-    });
-  }
-  updateCartBadge();
 }
 
 function renderFooter() {

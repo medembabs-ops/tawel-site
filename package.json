@@ -12,5 +12,8 @@
   "type": "commonjs",
   "dependencies": {
     "animejs": "^4.5.0"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^25.3.0"
   }
 }

@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<style>body{visibility:hidden}</style>
 <title>Your Cart — Tawel Style</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="assets/tailwind-config.js"></script>
@@ -38,6 +39,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/supabase-client.js"></script>
 <script src="assets/products.js"></script>
+<script src="assets/site-content.js"></script>
 <script src="assets/main.js"></script>
 <script>
   renderFooter();
@@ -105,8 +107,14 @@
   }
 
   (async () => {
+    if (await isSiteLocked()) {
+      renderLockScreen();
+      document.body.style.visibility = 'visible';
+      return;
+    }
     await loadProducts();
     renderCart();
+    document.body.style.visibility = 'visible';
   })();
 </script>
 </body>

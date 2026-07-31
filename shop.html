@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<style>body{visibility:hidden}</style>
 <title>Shop — Tawel Style</title>
 <meta name="description" content="The full Tawel Style collection: outerwear, dresses, tailoring and accessories." />
 <script src="https://cdn.tailwindcss.com"></script>
@@ -43,6 +44,12 @@
   renderHeaderDivider();
 
   (async () => {
+    if (await isSiteLocked()) {
+      renderLockScreen();
+      document.body.style.visibility = 'visible';
+      return;
+    }
+
     await loadProducts();
 
     const params = new URLSearchParams(location.search);
@@ -84,6 +91,7 @@
       `);
     });
     initPlates();
+    document.body.style.visibility = 'visible';
   })();
 </script>
 </body>

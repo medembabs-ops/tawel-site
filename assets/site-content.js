@@ -35,3 +35,34 @@ function applySiteContent() {
     }
   });
 }
+
+// Public pages call this first, before rendering anything else — if it
+// returns true they should call renderLockScreen() and skip their normal
+// render path. admin.html never calls this, so the owner can always get in
+// to flip the lock back off.
+async function isSiteLocked() {
+  await loadSiteContent();
+  return SITE_CONTENT['site.locked'] === 'true';
+}
+
+function renderLockScreen() {
+  document.body.innerHTML = '';
+  const main = document.createElement('main');
+  main.className = 'min-h-screen flex flex-col items-center justify-center text-center px-6 bg-ink text-ivory';
+
+  const logo = document.createElement('img');
+  logo.src = SITE_CONTENT['images.wordmark'] || 'brand_assets/wordmark-bordeaux.png';
+  logo.alt = 'Tawel Style';
+  logo.className = 'wordmark-reversed w-[60vw] max-w-[320px] h-auto mb-10';
+
+  const heading = document.createElement('h1');
+  heading.className = 'font-display text-[26px] md:text-[32px] mb-4';
+  heading.textContent = SITE_CONTENT['lock.heading'] || "We'll be right back";
+
+  const message = document.createElement('p');
+  message.className = 'text-[15px] text-blush max-w-[46ch] leading-[1.8]';
+  message.textContent = SITE_CONTENT['lock.message'] || 'Tawel Style is temporarily unavailable. Please check back soon.';
+
+  main.append(logo, heading, message);
+  document.body.appendChild(main);
+}

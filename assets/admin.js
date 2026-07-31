@@ -19,6 +19,8 @@ const IMAGE_LABELS = {
   'images.gold_star': 'Gold star mark',
   'images.lifestyle_seated': 'Homepage photo — seated',
   'images.lifestyle_back': 'Homepage photo — back',
+  'lock.heading': 'Locked page — heading',
+  'lock.message': 'Locked page — message',
 };
 
 function humanizeKey(key) {
@@ -38,6 +40,8 @@ const addProductBtn = document.getElementById('add-product-btn');
 const contentForm = document.getElementById('content-form');
 const contentStatus = document.getElementById('content-status');
 const siteImagesList = document.getElementById('site-images-list');
+const lockStatusText = document.getElementById('lock-status-text');
+const lockToggleBtn = document.getElementById('lock-toggle-btn');
 
 let products = [];
 
@@ -141,7 +145,7 @@ async function loadContentPanel() {
   }
   const rows = data || [];
   const imageRows = rows.filter((row) => row.key.startsWith('images.'));
-  const textRows = rows.filter((row) => !row.key.startsWith('images.'));
+  const textRows = rows.filter((row) => !row.key.startsWith('images.') && row.key !== 'site.locked');
 
   siteImagesList.innerHTML = imageRows.map(siteImageCardHtml).join('');
 
@@ -273,6 +277,27 @@ contentForm.addEventListener('submit', async (e) => {
   contentStatus.textContent = error ? `Save failed: ${error.message}` : 'Site copy saved.';
 });
 
+async function loadLockStatus() {
+  const { data, error } = await supabaseClient.from('site_content').select('value').eq('key', 'site.locked').maybeSingle();
+  const locked = !error && data?.value === 'true';
+  lockStatusText.textContent = locked
+    ? 'The site is locked — visitors only see a landing page.'
+    : 'The site is live and visible to everyone.';
+  lockToggleBtn.textContent = locked ? 'Unlock site' : 'Lock site';
+  lockToggleBtn.dataset.locked = String(locked);
+}
+
+lockToggleBtn.addEventListener('click', async () => {
+  const next = lockToggleBtn.dataset.locked !== 'true';
+  if (next && !confirm('Lock the site? Visitors will only see a landing page until you unlock it.')) return;
+  const { error } = await supabaseClient.from('site_content').upsert({ key: 'site.locked', value: String(next) });
+  if (error) {
+    lockStatusText.textContent = `Failed to update: ${error.message}`;
+    return;
+  }
+  await loadLockStatus();
+});
+
 loginForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   loginError.classList.add('hidden');
@@ -285,7 +310,7 @@ loginForm.addEventListener('submit', async (e) => {
     return;
   }
   showAdmin();
-  await Promise.all([loadProductsPanel(), loadContentPanel()]);
+  await Promise.all([loadProductsPanel(), loadContentPanel(), loadLockStatus()]);
 });
 
 logoutBtn.addEventListener('click', async () => {
@@ -302,7 +327,7 @@ logoutBtn.addEventListener('click', async () => {
   const { data } = await supabaseClient.auth.getSession();
   if (data.session) {
     showAdmin();
-    await Promise.all([loadProductsPanel(), loadContentPanel()]);
+    await Promise.all([loadProductsPanel(), loadContentPanel(), loadLockStatus()]);
   } else {
     showLogin();
   }

@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<style>body{visibility:hidden}</style>
 <title>About — Tawel Style</title>
 <meta name="description" content="The Tawel Style house: a single signature, a four-colour palette, and tailoring built around both." />
 <script src="https://cdn.tailwindcss.com"></script>
@@ -90,8 +91,14 @@
   renderHeaderDivider();
 
   (async () => {
+    if (await isSiteLocked()) {
+      renderLockScreen();
+      document.body.style.visibility = 'visible';
+      return;
+    }
     await loadSiteContent();
     applySiteContent();
+    document.body.style.visibility = 'visible';
   })();
 </script>
 </body>

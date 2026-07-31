@@ -65,7 +65,21 @@
       "Bash(node screenshot.mjs http://localhost:3000/about.html icons-star-aligned)",
       "Bash(node screenshot.mjs http://localhost:3000/about.html icons-star-fixed)",
       "Bash(node screenshot.mjs http://localhost:3000/index.html final-check-index)",
-      "Bash(node screenshot.mjs http://localhost:3000/index.html copy-updates)"
+      "Bash(node screenshot.mjs http://localhost:3000/index.html copy-updates)",
+      "Bash(gh api *)",
+      "Bash(curl -s \"https://api.github.com/repos/medembabs-ops/tawel-site/pages\")",
+      "Bash(curl -sI \"https://medembabs-ops.github.io/tawel-site/\")",
+      "Bash(git ls-remote *)",
+      "Bash(git check-ignore *)",
+      "Bash(lsof -i :3000 -sTCP:LISTEN)",
+      "Bash(curl *)",
+      "Bash(node screenshot.mjs http://localhost:3000/shop.html supabase-shop-test)",
+      "Bash(ps -p 1915 -o pid,command)",
+      "Bash(node -e ' *)",
+      "Bash(disown)",
+      "Bash(node screenshot.mjs http://localhost:3100/shop.html supabase-shop-test)",
+      "Bash(node screenshot.mjs http://localhost:3100/admin.html supabase-admin-test)",
+      "Bash(node screenshot.mjs http://localhost:3100/about.html supabase-about-test)"
     ]
   }
 }

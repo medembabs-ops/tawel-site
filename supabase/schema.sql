@@ -122,6 +122,5 @@ insert into site_content (key, value) values
   ('images.gold_star', 'brand_assets/gold-star.png'),
   ('images.lifestyle_seated', 'assets/img/lifestyle/well-beloved-seated.jpg'),
   ('images.lifestyle_back', 'assets/img/lifestyle/well-beloved-back.png'),
-  ('site.locked', 'false'),
-  ('lock.heading', 'We''ll be right back')
+  ('site.locked', 'false')
 on conflict (key) do nothing;

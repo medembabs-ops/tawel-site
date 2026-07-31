@@ -19,7 +19,6 @@ const IMAGE_LABELS = {
   'images.gold_star': 'Gold star mark',
   'images.lifestyle_seated': 'Homepage photo — seated',
   'images.lifestyle_back': 'Homepage photo — back',
-  'lock.heading': 'Locked page — heading',
 };
 
 function humanizeKey(key) {

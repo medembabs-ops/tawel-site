@@ -71,13 +71,9 @@ function renderLockScreen() {
   const logo = document.createElement('img');
   logo.src = SITE_CONTENT['images.wordmark'] || 'brand_assets/wordmark-bordeaux.png';
   logo.alt = 'Tawel Style';
-  logo.className = 'wordmark-reversed w-[78vw] max-w-[560px] h-auto mb-8';
+  logo.className = 'wordmark-reversed wordmark-reveal w-[78vw] max-w-[560px] h-auto';
 
-  const heading = document.createElement('p');
-  heading.className = 'label text-[11px] md:text-xs text-blush';
-  heading.textContent = SITE_CONTENT['lock.heading'] || "We'll be right back";
-
-  content.append(logo, heading);
+  content.append(logo);
   main.append(gradient, grain, star, content);
   document.body.appendChild(main);
 }

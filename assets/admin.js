@@ -14,7 +14,15 @@ function slugify(str) {
     .replace(/^-+|-+$/g, '');
 }
 
+const IMAGE_LABELS = {
+  'images.wordmark': 'Logo (wordmark)',
+  'images.gold_star': 'Gold star mark',
+  'images.lifestyle_seated': 'Homepage photo — seated',
+  'images.lifestyle_back': 'Homepage photo — back',
+};
+
 function humanizeKey(key) {
+  if (IMAGE_LABELS[key]) return IMAGE_LABELS[key];
   const [section, field] = key.split('.');
   return `${section[0].toUpperCase()}${section.slice(1)} — ${field.replace(/_/g, ' ')}`;
 }
@@ -29,6 +37,7 @@ const productsStatus = document.getElementById('products-status');
 const addProductBtn = document.getElementById('add-product-btn');
 const contentForm = document.getElementById('content-form');
 const contentStatus = document.getElementById('content-status');
+const siteImagesList = document.getElementById('site-images-list');
 
 let products = [];
 
@@ -110,13 +119,33 @@ async function loadProductsPanel() {
   renderProducts();
 }
 
+function siteImageCardHtml(row) {
+  return `
+    <div class="border border-blush p-4" data-image-key="${row.key}">
+      <img src="${row.value || 'https://placehold.co/400x300?text=No+image'}" alt="" class="w-full aspect-[4/3] object-cover bg-blush/20 mb-3" data-role="image-preview" />
+      <p class="label text-[10px] text-ink/60 mb-2">${humanizeKey(row.key)}</p>
+      <label class="label text-[10px] text-bordeaux underline-grow cursor-pointer">
+        Change photo
+        <input type="file" accept="image/*" class="hidden" data-role="image-upload" />
+      </label>
+      <p class="text-[11px] text-ink/50 mt-1" data-role="upload-status"></p>
+    </div>
+  `;
+}
+
 async function loadContentPanel() {
   const { data, error } = await supabaseClient.from('site_content').select('*').order('key', { ascending: true });
   if (error) {
     contentStatus.textContent = `Failed to load site copy: ${error.message}`;
     return;
   }
-  contentForm.innerHTML = (data || [])
+  const rows = data || [];
+  const imageRows = rows.filter((row) => row.key.startsWith('images.'));
+  const textRows = rows.filter((row) => !row.key.startsWith('images.'));
+
+  siteImagesList.innerHTML = imageRows.map(siteImageCardHtml).join('');
+
+  contentForm.innerHTML = textRows
     .map((row) => {
       const long = row.value.length > 80;
       const field = long
@@ -131,6 +160,34 @@ async function loadContentPanel() {
     })
     .join('');
 }
+
+siteImagesList.addEventListener('change', async (e) => {
+  if (e.target.getAttribute('data-role') !== 'image-upload') return;
+  const card = e.target.closest('[data-image-key]');
+  const key = card.getAttribute('data-image-key');
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const uploadStatus = card.querySelector('[data-role="upload-status"]');
+  const preview = card.querySelector('[data-role="image-preview"]');
+  uploadStatus.textContent = 'Uploading…';
+
+  const path = `${Date.now()}-${slugify(file.name)}`;
+  const { error: uploadError } = await supabaseClient.storage.from('site-images').upload(path, file);
+  if (uploadError) {
+    uploadStatus.textContent = `Upload failed: ${uploadError.message}`;
+    return;
+  }
+
+  const { data: publicData } = supabaseClient.storage.from('site-images').getPublicUrl(path);
+  const { error: saveError } = await supabaseClient.from('site_content').upsert({ key, value: publicData.publicUrl });
+  if (saveError) {
+    uploadStatus.textContent = `Save failed: ${saveError.message}`;
+    return;
+  }
+  preview.setAttribute('src', publicData.publicUrl);
+  uploadStatus.textContent = 'Updated — live on the site now.';
+});
 
 productsList.addEventListener('click', async (e) => {
   const card = e.target.closest('[data-product-id], [data-is-new]');

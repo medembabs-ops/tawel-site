@@ -30,23 +30,27 @@ alter table products enable row level security;
 alter table site_content enable row level security;
 
 -- Public (storefront) can read everything.
+drop policy if exists "products readable by anyone" on products;
 create policy "products readable by anyone"
   on products for select
   to anon, authenticated
   using (true);
 
+drop policy if exists "site_content readable by anyone" on site_content;
 create policy "site_content readable by anyone"
   on site_content for select
   to anon, authenticated
   using (true);
 
 -- Only the logged-in owner (the one manually-created auth user) can write.
+drop policy if exists "products writable by authenticated" on products;
 create policy "products writable by authenticated"
   on products for all
   to authenticated
   using (true)
   with check (true);
 
+drop policy if exists "site_content writable by authenticated" on site_content;
 create policy "site_content writable by authenticated"
   on site_content for all
   to authenticated
@@ -59,16 +63,36 @@ create policy "site_content writable by authenticated"
 -- Create the bucket first via Dashboard → Storage → New bucket → "product-images" → Public.
 -- Then run the policies below (Storage policies live on storage.objects).
 
+drop policy if exists "product-images readable by anyone" on storage.objects;
 create policy "product-images readable by anyone"
   on storage.objects for select
   to anon, authenticated
   using (bucket_id = 'product-images');
 
+drop policy if exists "product-images writable by authenticated" on storage.objects;
 create policy "product-images writable by authenticated"
   on storage.objects for all
   to authenticated
   using (bucket_id = 'product-images')
   with check (bucket_id = 'product-images');
+
+-- ============================================================
+-- Storage — site images (logo, marks, homepage photography)
+-- ============================================================
+-- Create the bucket first via Dashboard → Storage → New bucket → "site-images" → Public.
+
+drop policy if exists "site-images readable by anyone" on storage.objects;
+create policy "site-images readable by anyone"
+  on storage.objects for select
+  to anon, authenticated
+  using (bucket_id = 'site-images');
+
+drop policy if exists "site-images writable by authenticated" on storage.objects;
+create policy "site-images writable by authenticated"
+  on storage.objects for all
+  to authenticated
+  using (bucket_id = 'site-images')
+  with check (bucket_id = 'site-images');
 
 -- ============================================================
 -- Seed data — current catalog and site copy
@@ -93,5 +117,9 @@ insert into site_content (key, value) values
   ('about.pull_quote', 'Four colours. One hand. No second script.'),
   ('contact.intro_paragraph', 'For orders, fit questions, or press enquiries, write to us directly. We reply within two working days.'),
   ('contact.email', 'hello@tawelstyle.com'),
-  ('contact.shipping_note', 'Complimentary returns within 14 days of delivery.')
+  ('contact.shipping_note', 'Complimentary returns within 14 days of delivery.'),
+  ('images.wordmark', 'brand_assets/wordmark-bordeaux.png'),
+  ('images.gold_star', 'brand_assets/gold-star.png'),
+  ('images.lifestyle_seated', 'assets/img/lifestyle/well-beloved-seated.jpg'),
+  ('images.lifestyle_back', 'assets/img/lifestyle/well-beloved-back.png')
 on conflict (key) do nothing;

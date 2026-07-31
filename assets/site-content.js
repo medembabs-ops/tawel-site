@@ -25,6 +25,10 @@ function applySiteContent() {
     const key = el.getAttribute('data-content-key');
     const value = SITE_CONTENT[key];
     if (!value) return;
+    if (el.tagName === 'IMG') {
+      el.setAttribute('src', value);
+      return;
+    }
     el.textContent = value;
     if (el.tagName === 'A' && el.getAttribute('href')?.startsWith('mailto:')) {
       el.setAttribute('href', `mailto:${value}`);

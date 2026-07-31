@@ -137,7 +137,7 @@ function renderHeaderDivider() {
   if (document.getElementById('header-divider')) return;
   document.body.insertAdjacentHTML('beforeend', `
     <div id="header-divider" class="fixed top-0 inset-x-0 z-30 h-20 bg-bordeaux">
-      <img src="brand_assets/gold-star.png" alt="" class="absolute top-1/2 left-14 md:left-16 -translate-y-1/2 h-20 w-auto" />
+      <img src="brand_assets/gold-star.png" alt="" data-content-key="images.gold_star" class="absolute top-1/2 left-14 md:left-16 -translate-y-1/2 h-20 w-auto" />
     </div>
   `);
 }
@@ -181,7 +181,7 @@ function renderFooter() {
     <footer class="bg-bordeaux text-ivory">
       <div class="max-w-7xl mx-auto px-6 md:px-10 py-16 grid grid-cols-2 md:grid-cols-4 gap-10">
         <div class="col-span-2 md:col-span-1">
-          <img src="brand_assets/wordmark-bordeaux.png" alt="Tawel Style" class="h-8 w-auto wordmark-reversed mb-4" />
+          <img src="brand_assets/wordmark-bordeaux.png" alt="Tawel Style" data-content-key="images.wordmark" class="h-8 w-auto wordmark-reversed mb-4" />
           <p class="text-[13px] text-blush leading-relaxed max-w-[22ch]">Bordeaux on ivory. Cut quietly, worn deliberately.</p>
         </div>
         <div>

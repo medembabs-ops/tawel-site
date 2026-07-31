@@ -20,7 +20,6 @@ const IMAGE_LABELS = {
   'images.lifestyle_seated': 'Homepage photo — seated',
   'images.lifestyle_back': 'Homepage photo — back',
   'lock.heading': 'Locked page — heading',
-  'lock.message': 'Locked page — message',
 };
 
 function humanizeKey(key) {

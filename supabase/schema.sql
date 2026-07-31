@@ -123,6 +123,5 @@ insert into site_content (key, value) values
   ('images.lifestyle_seated', 'assets/img/lifestyle/well-beloved-seated.jpg'),
   ('images.lifestyle_back', 'assets/img/lifestyle/well-beloved-back.png'),
   ('site.locked', 'false'),
-  ('lock.heading', 'We''ll be right back'),
-  ('lock.message', 'Tawel Style is temporarily unavailable. Please check back soon.')
+  ('lock.heading', 'We''ll be right back')
 on conflict (key) do nothing;

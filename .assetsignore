@@ -1,0 +1,19 @@
+node_modules
+.git
+.wrangler
+.claude
+.github
+supabase
+pictures
+temporary screenshots
+package.json
+package-lock.json
+serve.mjs
+screenshot.mjs
+connection-file.md
+DEPLOY.md
+CLAUDE.md
+.gitignore
+.wranglerignore
+.assetsignore
+wrangler.jsonc

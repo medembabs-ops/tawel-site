@@ -198,6 +198,18 @@ body {
 @media (min-width: 768px) {
   .scroll-card-inner { height: 32rem; }
 }
+
+/* Locked-page eyebrow: the horizontal stretch only fits on wider screens —
+   on a phone it pushes the text past the viewport edge. */
+.eyebrow-stretch {
+  transform: scaleX(1.4);
+  transform-origin: center;
+}
+@media (max-width: 767px) {
+  .eyebrow-stretch {
+    transform: none;
+  }
+}
 @media (max-width: 767px) {
   .scroll-card {
     transform: perspective(1400px) rotateX(calc(20deg - var(--progress) * 20deg)) scale(calc(0.7 + var(--progress) * 0.2));

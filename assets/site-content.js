@@ -209,9 +209,7 @@ function renderLockScreen() {
   main.style.backgroundColor = '#F5F5F5';
 
   const eyebrow = document.createElement('p');
-  eyebrow.className = 'font-display italic font-bold text-[13px] md:text-[15px] text-bordeaux text-center px-6 py-5';
-  eyebrow.style.transform = 'scaleX(1.4)';
-  eyebrow.style.transformOrigin = 'center';
+  eyebrow.className = 'eyebrow-stretch font-display italic font-bold text-[13px] md:text-[15px] text-bordeaux text-center px-6 py-5';
   eyebrow.textContent = SITE_CONTENT['lock.eyebrow'] || 'Somethings are worth discovering before they are announced';
 
   const gridWrap = document.createElement('div');

@@ -22,12 +22,19 @@ create table if not exists site_content (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists guest_list (
+  id bigint generated always as identity primary key,
+  email text not null unique,
+  created_at timestamptz not null default now()
+);
+
 -- ============================================================
 -- Row Level Security
 -- ============================================================
 
 alter table products enable row level security;
 alter table site_content enable row level security;
+alter table guest_list enable row level security;
 
 -- Public (storefront) can read everything.
 drop policy if exists "products readable by anyone" on products;
@@ -56,6 +63,20 @@ create policy "site_content writable by authenticated"
   to authenticated
   using (true)
   with check (true);
+
+-- Guest list: anyone can join (insert their own email), but only the
+-- logged-in owner can read the list back — visitors can't see who else signed up.
+drop policy if exists "guest_list insertable by anyone" on guest_list;
+create policy "guest_list insertable by anyone"
+  on guest_list for insert
+  to anon, authenticated
+  with check (true);
+
+drop policy if exists "guest_list readable by authenticated" on guest_list;
+create policy "guest_list readable by authenticated"
+  on guest_list for select
+  to authenticated
+  using (true);
 
 -- ============================================================
 -- Storage — product images

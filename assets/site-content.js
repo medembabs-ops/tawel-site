@@ -49,19 +49,11 @@ function renderLockScreen() {
   document.body.innerHTML = '';
 
   const main = document.createElement('main');
-  main.className = 'relative min-h-screen md:h-screen overflow-hidden bg-ink text-ivory grid md:grid-cols-2';
+  main.className = 'relative min-h-screen md:h-screen overflow-hidden text-ink grid md:grid-cols-2';
+  main.style.backgroundColor = '#F5F5F5';
 
   const brandPanel = document.createElement('div');
-  brandPanel.className = 'relative flex flex-col items-center justify-center overflow-hidden py-24 md:py-0';
-
-  const gradient = document.createElement('div');
-  gradient.className = 'absolute inset-0';
-  gradient.style.background =
-    'radial-gradient(120% 90% at 15% 10%, rgba(99,1,15,0.85) 0%, rgba(26,19,21,1) 55%),' +
-    'radial-gradient(90% 70% at 85% 95%, rgba(99,1,15,0.55) 0%, rgba(26,19,21,0) 60%)';
-
-  const grain = document.createElement('div');
-  grain.className = 'grain absolute inset-0 opacity-60';
+  brandPanel.className = 'grain relative flex flex-col items-center justify-center overflow-hidden py-24 md:py-0';
 
   const star = document.createElement('img');
   star.src = SITE_CONTENT['images.gold_star'] || 'brand_assets/gold-star.png';
@@ -69,20 +61,30 @@ function renderLockScreen() {
   star.className = 'absolute top-6 left-14 md:top-8 md:left-16 z-20 h-20 w-auto';
 
   const content = document.createElement('div');
-  content.className = 'relative z-10 flex flex-col items-center px-6 text-center';
+  content.className = 'relative z-10 flex flex-col items-center px-6 text-center gap-6';
 
   const logo = document.createElement('img');
-  logo.src = SITE_CONTENT['images.wordmark'] || 'brand_assets/wordmark-bordeaux.png';
+  logo.src = SITE_CONTENT['images.lock_logo'] || 'assets/img/lock/wordmark-maroon.png';
   logo.alt = 'Tawel Style';
-  logo.className = 'wordmark-reversed wordmark-reveal w-[78vw] max-w-[560px] h-auto';
+  logo.className = 'wordmark-reveal w-[78vw] max-w-[560px] h-auto';
 
-  content.append(logo);
-  brandPanel.append(gradient, grain, star, content);
+  const tagline = document.createElement('img');
+  tagline.src = SITE_CONTENT['images.lock_tagline'] || 'assets/img/lock/tagline-maroon.png';
+  tagline.alt = 'To all we ever love';
+  tagline.className = 'w-[52vw] max-w-[320px] h-auto';
+
+  content.append(logo, tagline);
+  brandPanel.append(star, content);
 
   const photoPanel = document.createElement('div');
-  photoPanel.className = 'duotone h-[45vh] md:h-auto bg-cover bg-top';
-  photoPanel.style.backgroundImage = `url('${SITE_CONTENT['images.lock_photo'] || 'assets/img/lock/model.png'}')`;
+  photoPanel.className = 'relative h-[45vh] md:h-auto overflow-hidden';
 
+  const photo = document.createElement('img');
+  photo.src = SITE_CONTENT['images.lock_photo'] || 'assets/img/lock/model.png';
+  photo.alt = '';
+  photo.className = 'w-full h-full object-cover object-top';
+
+  photoPanel.appendChild(photo);
   main.append(brandPanel, photoPanel);
   document.body.appendChild(main);
 }

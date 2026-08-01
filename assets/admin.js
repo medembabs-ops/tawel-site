@@ -19,6 +19,8 @@ const IMAGE_LABELS = {
   'images.gold_star': 'Gold star mark',
   'images.lifestyle_seated': 'Homepage photo — seated',
   'images.lifestyle_back': 'Homepage photo — back',
+  'images.lock_logo': 'Locked page — logo',
+  'images.lock_tagline': 'Locked page — tagline',
   'images.lock_photo': 'Locked page — photo',
 };
 

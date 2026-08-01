@@ -243,7 +243,7 @@ function renderLockScreen() {
   brandPanel.append(content);
 
   const photoPanel = document.createElement('div');
-  photoPanel.className = 'relative h-[45vh] md:h-auto overflow-hidden';
+  photoPanel.className = 'relative h-[45vh] md:h-auto overflow-hidden md:translate-x-[-64px]';
 
   const photo = document.createElement('img');
   photo.src = SITE_CONTENT['images.lock_photo'] || 'assets/img/lock/model.png';

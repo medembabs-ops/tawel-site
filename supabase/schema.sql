@@ -28,6 +28,16 @@ create table if not exists guest_list (
   created_at timestamptz not null default now()
 );
 
+create table if not exists debut_items (
+  id bigint generated always as identity primary key,
+  name text not null,
+  price numeric,
+  image text,
+  link_url text,
+  sort_order integer not null default 0,
+  created_at timestamptz not null default now()
+);
+
 create table if not exists orders (
   id bigint generated always as identity primary key,
   reference text not null unique,
@@ -48,6 +58,7 @@ create table if not exists orders (
 alter table products enable row level security;
 alter table site_content enable row level security;
 alter table guest_list enable row level security;
+alter table debut_items enable row level security;
 alter table orders enable row level security;
 
 -- Public (storefront) can read everything.
@@ -74,6 +85,22 @@ create policy "products writable by authenticated"
 drop policy if exists "site_content writable by authenticated" on site_content;
 create policy "site_content writable by authenticated"
   on site_content for all
+  to authenticated
+  using (true)
+  with check (true);
+
+-- Debut/featured items: a curated set shown in the homepage slider,
+-- separate from the main catalog — for spotlighting new drops or sales
+-- without touching the actual product listings.
+drop policy if exists "debut_items readable by anyone" on debut_items;
+create policy "debut_items readable by anyone"
+  on debut_items for select
+  to anon, authenticated
+  using (true);
+
+drop policy if exists "debut_items writable by authenticated" on debut_items;
+create policy "debut_items writable by authenticated"
+  on debut_items for all
   to authenticated
   using (true)
   with check (true);

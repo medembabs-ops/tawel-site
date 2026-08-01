@@ -124,16 +124,28 @@
       return;
     }
 
-    await Promise.all([loadProducts(), loadSiteContent()]);
+    const [, , debutRes] = await Promise.all([
+      loadProducts(),
+      loadSiteContent(),
+      supabaseClient ? supabaseClient.from('debut_items').select('*').order('created_at', { ascending: true }) : Promise.resolve({ data: [] }),
+    ]);
     applySiteContent();
 
+    // The DEBUT slider is curated separately from the catalog (new drops,
+    // sale spotlights) via the admin panel — falls back to regular products
+    // if nothing's been curated yet.
+    const debutItems = debutRes?.data || [];
+    const debutSource = debutItems.length
+      ? debutItems.map((d) => ({ name: d.name, price: d.price, image: d.image, href: d.link_url || 'shop.html' }))
+      : PRODUCTS.map((p) => ({ name: p.name, price: p.price, image: p.image, href: `product.html?id=${p.id}` }));
+
     const arrivalsTrack = document.getElementById('arrivals-track');
-    [...PRODUCTS, ...PRODUCTS].forEach((p) => {
+    [...debutSource, ...debutSource].forEach((item) => {
       arrivalsTrack.insertAdjacentHTML('beforeend', `
-        <a href="product.html?id=${p.id}" class="infinite-slider-item group block">
-          <img src="${p.image}" alt="${p.name}" loading="lazy" />
-          <p class="text-[12px] mt-2 leading-snug group-hover:text-bordeaux transition-colors">${p.name}</p>
-          <p class="text-[12px] text-ink/60">${formatPrice(p.price)}</p>
+        <a href="${item.href}" class="infinite-slider-item group block">
+          <img src="${item.image || 'https://placehold.co/420x525?text=Tawel+Style'}" alt="${item.name}" loading="lazy" />
+          <p class="text-[12px] mt-2 leading-snug group-hover:text-bordeaux transition-colors">${item.name}</p>
+          ${item.price != null ? `<p class="text-[12px] text-ink/60">${formatPrice(item.price)}</p>` : ''}
         </a>
       `);
     });

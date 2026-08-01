@@ -247,15 +247,43 @@ function initScrollCard() {
   update();
 }
 
-// Vanilla equivalent of an infinite auto-scrolling slider — expects the
-// track's content already duplicated in the DOM (rendered twice by the
-// page) so the loop can wrap seamlessly at the halfway point. Speed eases
-// toward data-hover-speed on hover instead of snapping.
+// Auto-advancing but genuinely user-scrollable slider. The track's content
+// is duplicated in the DOM (rendered twice by the page) so el.scrollLeft can
+// wrap seamlessly at the halfway point — in either direction, whether the
+// scroll came from our own auto-advance or from the visitor dragging/
+// wheeling/touching it themselves. Speed eases toward data-hover-speed on
+// hover; auto-advance pauses for a moment after any user interaction so it
+// never fights their scroll.
 function initInfiniteSliders() {
   document.querySelectorAll('.infinite-slider').forEach((el) => {
     const track = el.querySelector('.infinite-slider-track');
     if (!track || track.dataset.sliderInit) return;
     track.dataset.sliderInit = 'true';
+
+    let halfWidth = track.scrollWidth / 2;
+    window.addEventListener('resize', () => {
+      halfWidth = track.scrollWidth / 2;
+    });
+
+    el.addEventListener('scroll', () => {
+      if (halfWidth <= 0) return;
+      if (el.scrollLeft >= halfWidth) {
+        el.scrollLeft -= halfWidth;
+      } else if (el.scrollLeft < 0) {
+        el.scrollLeft += halfWidth;
+      }
+    });
+
+    let userActive = false;
+    let userActiveTimer = null;
+    const markUserActive = () => {
+      userActive = true;
+      clearTimeout(userActiveTimer);
+      userActiveTimer = setTimeout(() => { userActive = false; }, 1200);
+    };
+    el.addEventListener('pointerdown', markUserActive);
+    el.addEventListener('wheel', markUserActive, { passive: true });
+    el.addEventListener('touchstart', markUserActive, { passive: true });
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
@@ -263,13 +291,8 @@ function initInfiniteSliders() {
     const hoverSpeed = parseFloat(el.dataset.hoverSpeed || '12');
     let target = baseSpeed;
     let current = baseSpeed;
-    let x = 0;
-    let halfWidth = track.scrollWidth / 2;
     let last = null;
 
-    window.addEventListener('resize', () => {
-      halfWidth = track.scrollWidth / 2;
-    });
     el.addEventListener('mouseenter', () => { target = hoverSpeed; });
     el.addEventListener('mouseleave', () => { target = baseSpeed; });
 
@@ -278,9 +301,9 @@ function initInfiniteSliders() {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       current += (target - current) * Math.min(1, dt * 3);
-      x -= current * dt;
-      if (halfWidth > 0 && Math.abs(x) >= halfWidth) x += halfWidth;
-      track.style.transform = `translateX(${x}px)`;
+      if (!userActive) {
+        el.scrollLeft += current * dt;
+      }
       requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);

@@ -212,18 +212,26 @@ body {
 
 /* Infinite auto-scrolling strip — vanilla stand-in for a marquee/slider
    component. Content is rendered twice by the page script for a seamless
-   loop; assets/main.js drives the translateX via requestAnimationFrame and
-   eases to data-hover-speed on hover. */
+   loop; assets/main.js auto-advances el.scrollLeft via requestAnimationFrame
+   and eases to data-hover-speed on hover — but it's a real scroll container,
+   so a visitor can grab it (drag, wheel, touch, trackpad) and scroll it
+   themselves at any time; the auto-advance quietly resumes once they stop. */
 .infinite-slider {
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
   -webkit-mask-image: linear-gradient(90deg, transparent, black 4%, black 96%, transparent);
   mask-image: linear-gradient(90deg, transparent, black 4%, black 96%, transparent);
+}
+.infinite-slider::-webkit-scrollbar {
+  display: none;
 }
 .infinite-slider-track {
   display: flex;
   width: max-content;
   gap: 1.5rem;
-  will-change: transform;
 }
 .infinite-slider-item {
   flex: 0 0 auto;
@@ -237,10 +245,5 @@ body {
   aspect-ratio: 4 / 5;
   object-fit: cover;
   display: block;
-}
-@media (prefers-reduced-motion: reduce) {
-  .infinite-slider {
-    overflow-x: auto;
-  }
 }
 

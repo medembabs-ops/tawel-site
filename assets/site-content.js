@@ -61,7 +61,7 @@ function renderLockScreen() {
   star.className = 'absolute top-6 left-14 md:top-8 md:left-16 z-20 h-20 w-auto';
 
   const content = document.createElement('div');
-  content.className = 'relative z-10 flex flex-col items-center px-6 text-center gap-6';
+  content.className = 'relative z-10 flex flex-col items-center px-6 text-center gap-1';
 
   const logo = document.createElement('img');
   logo.src = SITE_CONTENT['images.lock_logo'] || 'assets/img/lock/wordmark-maroon.png';

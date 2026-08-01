@@ -49,11 +49,18 @@ function renderLockScreen() {
   document.body.innerHTML = '';
 
   const main = document.createElement('main');
-  main.className = 'relative min-h-screen md:h-screen overflow-hidden text-ink grid md:grid-cols-2';
+  main.className = 'relative min-h-screen md:h-screen overflow-hidden text-ink flex flex-col';
   main.style.backgroundColor = '#F5F5F5';
 
+  const eyebrow = document.createElement('p');
+  eyebrow.className = 'font-display italic text-[13px] md:text-[15px] text-ink/60 text-center px-6 py-5';
+  eyebrow.textContent = SITE_CONTENT['lock.eyebrow'] || 'Somethings are worth discovering before they are announced';
+
+  const gridWrap = document.createElement('div');
+  gridWrap.className = 'relative flex-1 overflow-hidden grid md:grid-cols-2';
+
   const brandPanel = document.createElement('div');
-  brandPanel.className = 'grain relative flex flex-col items-center justify-center overflow-hidden py-24 md:py-0';
+  brandPanel.className = 'grain relative flex flex-col items-center justify-center overflow-hidden py-16 md:py-0';
 
   const star = document.createElement('img');
   star.src = SITE_CONTENT['images.gold_star'] || 'brand_assets/gold-star.png';
@@ -61,7 +68,7 @@ function renderLockScreen() {
   star.className = 'absolute top-6 left-14 md:top-8 md:left-16 z-20 h-20 w-auto';
 
   const content = document.createElement('div');
-  content.className = 'relative z-10 flex flex-col items-center px-6 text-center gap-1';
+  content.className = 'relative z-10 flex flex-col items-center px-6 text-center';
 
   const logo = document.createElement('img');
   logo.src = SITE_CONTENT['images.lock_logo'] || 'assets/img/lock/wordmark-maroon.png';
@@ -71,9 +78,17 @@ function renderLockScreen() {
   const tagline = document.createElement('img');
   tagline.src = SITE_CONTENT['images.lock_tagline'] || 'assets/img/lock/tagline-maroon.png';
   tagline.alt = 'To all we ever love';
-  tagline.className = 'w-[52vw] max-w-[320px] h-auto';
+  tagline.className = 'w-[42vw] max-w-[256px] h-auto mt-1';
 
-  content.append(logo, tagline);
+  const subheading = document.createElement('p');
+  subheading.className = 'text-[14px] md:text-[15px] text-ink/70 mt-6';
+  subheading.textContent = SITE_CONTENT['lock.subheading'] || "Preparing for it's first chapter";
+
+  const cta = document.createElement('p');
+  cta.className = 'label text-[11px] text-bordeaux underline-grow cursor-pointer mt-3';
+  cta.textContent = SITE_CONTENT['lock.cta'] || 'Join the guest list';
+
+  content.append(logo, tagline, subheading, cta);
   brandPanel.append(star, content);
 
   const photoPanel = document.createElement('div');
@@ -85,6 +100,7 @@ function renderLockScreen() {
   photo.className = 'w-full h-full object-cover object-top';
 
   photoPanel.appendChild(photo);
-  main.append(brandPanel, photoPanel);
+  gridWrap.append(brandPanel, photoPanel);
+  main.append(eyebrow, gridWrap);
   document.body.appendChild(main);
 }

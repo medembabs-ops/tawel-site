@@ -22,6 +22,9 @@ const IMAGE_LABELS = {
   'images.lock_logo': 'Locked page — logo',
   'images.lock_tagline': 'Locked page — tagline',
   'images.lock_photo': 'Locked page — photo',
+  'lock.eyebrow': 'Locked page — top eyebrow line',
+  'lock.subheading': 'Locked page — subheading',
+  'lock.cta': 'Locked page — call to action',
 };
 
 function humanizeKey(key) {

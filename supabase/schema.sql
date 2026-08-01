@@ -125,5 +125,8 @@ insert into site_content (key, value) values
   ('images.lock_logo', 'assets/img/lock/wordmark-maroon.png'),
   ('images.lock_tagline', 'assets/img/lock/tagline-maroon.png'),
   ('images.lock_photo', 'assets/img/lock/model.png'),
+  ('lock.eyebrow', 'Somethings are worth discovering before they are announced'),
+  ('lock.subheading', 'Preparing for it''s first chapter'),
+  ('lock.cta', 'Join the guest list'),
   ('site.locked', 'false')
 on conflict (key) do nothing;

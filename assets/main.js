@@ -180,9 +180,8 @@ function renderFooter() {
   mount.innerHTML = `
     <footer class="bg-bordeaux text-ivory">
       <div class="max-w-7xl mx-auto px-6 md:px-10 py-16 grid grid-cols-2 md:grid-cols-4 gap-10">
-        <div class="col-span-2 md:col-span-1">
-          <img src="brand_assets/wordmark-bordeaux.png" alt="Tawel Style" data-content-key="images.wordmark" class="h-8 w-auto wordmark-reversed mb-4" />
-          <p class="text-[13px] text-blush leading-relaxed max-w-[22ch]">Bordeaux on ivory. Cut quietly, worn deliberately.</p>
+        <div class="col-span-2 md:col-span-1 flex items-center">
+          <img src="brand_assets/wordmark-bordeaux.png" alt="Tawel Style" data-content-key="images.wordmark" class="h-16 w-auto wordmark-reversed" />
         </div>
         <div>
           <p class="label text-[10px] text-blush mb-4">Shop</p>
@@ -208,9 +207,8 @@ function renderFooter() {
         </div>
       </div>
       <div class="border-t border-white/15">
-        <div class="max-w-7xl mx-auto px-6 md:px-10 py-6 flex flex-col md:flex-row justify-between gap-2 text-[11px] text-blush">
+        <div class="max-w-7xl mx-auto px-6 md:px-10 py-6 text-[11px] text-blush">
           <p>&copy; ${year} Tawel Style. All rights reserved.</p>
-          <p>Bordeaux #63010F &middot; Ivory #F6F2EC</p>
         </div>
       </div>
     </footer>

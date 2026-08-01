@@ -93,6 +93,15 @@
     }
     await loadSiteContent();
     applySiteContent();
+
+    const aboutPhoto = SITE_CONTENT['images.about_photo'];
+    if (aboutPhoto) {
+      const plateEl = document.querySelector('[data-plate="c"]');
+      if (plateEl) {
+        plateEl.outerHTML = `<div class="media-photo aspect-[4/5] md:aspect-auto order-2 md:order-1"><img src="${aboutPhoto}" alt="Tawel Style" loading="lazy" /></div>`;
+      }
+    }
+
     document.body.style.visibility = 'visible';
   })();
 </script>

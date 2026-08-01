@@ -19,6 +19,7 @@ const IMAGE_LABELS = {
   'images.gold_star': 'Gold star mark',
   'images.lifestyle_seated': 'Homepage photo — seated',
   'images.lifestyle_back': 'Homepage photo — back',
+  'images.about_photo': 'About page — photo',
   'images.lock_logo': 'Locked page — logo',
   'images.lock_tagline': 'Locked page — tagline',
   'images.lock_photo': 'Locked page — photo',
@@ -197,8 +198,10 @@ async function loadAnalytics() {
     return t >= start && (!end || t < end);
   });
 
-  const ordersThisWeek = inRange(orders, weekAgo);
-  const ordersLastWeek = inRange(orders, twoWeeksAgo, weekAgo);
+  // "Orders" means paid orders — an order that's still pending or was
+  // cancelled never actually became a sale.
+  const ordersThisWeek = inRange(paidOrders, weekAgo);
+  const ordersLastWeek = inRange(paidOrders, twoWeeksAgo, weekAgo);
   const revenueThisWeek = inRange(paidOrders, weekAgo).reduce((s, o) => s + Number(o.amount), 0);
   const revenueLastWeek = inRange(paidOrders, twoWeeksAgo, weekAgo).reduce((s, o) => s + Number(o.amount), 0);
   const signupsThisWeek = inRange(guestList, weekAgo);
@@ -226,7 +229,7 @@ async function loadAnalytics() {
 
   // KPI row, each with a real week-over-week trend badge.
   const tiles = [
-    statTileHtml('Total orders', orders.length, trendBadge(ordersThisWeek.length, ordersLastWeek.length, true)),
+    statTileHtml('Orders (paid)', paidOrders.length, trendBadge(ordersThisWeek.length, ordersLastWeek.length, true)),
     statTileHtml('Revenue (paid)', formatCurrency(revenue), trendBadge(revenueThisWeek, revenueLastWeek, true)),
     statTileHtml('Guest list signups', guestList.length, trendBadge(signupsThisWeek.length, signupsLastWeek.length, true)),
     statTileHtml('Pending orders', pendingOrders.length, trendBadge(pendingThisWeek.length, pendingLastWeek.length, false)),
@@ -234,19 +237,33 @@ async function loadAnalytics() {
   ];
   analyticsStats.innerHTML = tiles.join('');
 
-  // Main chart: orders per day, last 14 days.
+  // Main chart: paid orders per day, last 14 days.
   const days = lastNDays(14);
-  const orderCounts = countByDay(orders, days);
+  const orderCounts = countByDay(paidOrders, days);
   const dayLabels = days.map((d) => String(d.getDate()));
   renderAreaChart(ordersChartEl, dayLabels.map((label, i) => ({ label, value: orderCounts[i] })));
 
   analyticsStatus.textContent = '';
 }
 
-const ORDER_STATUSES = ['pending', 'paid', 'cancelled', 'failed'];
+const ORDER_STATUS_BADGE = {
+  paid: 'text-gold bg-gold/10',
+  cancelled: 'text-bordeaux bg-bordeaux/10',
+  failed: 'text-bordeaux bg-bordeaux/10',
+};
 
 function orderRowHtml(order) {
   const date = new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const isPending = order.payment_status === 'pending';
+  const action = isPending
+    ? `
+      <div class="flex gap-2 flex-shrink-0">
+        <button type="button" data-action="sent" class="label text-[10px] bg-bordeaux text-ivory px-4 py-2 hover:bg-bordeaux-dark transition-colors">Sent</button>
+        <button type="button" data-action="cancel" class="label text-[10px] border border-blush px-4 py-2 hover:border-bordeaux hover:text-bordeaux transition-colors">Cancel</button>
+      </div>
+    `
+    : `<span class="label text-[10px] px-3 py-2 flex-shrink-0 ${ORDER_STATUS_BADGE[order.payment_status] || 'text-ink/60 bg-blush/20'}">${order.payment_status.toUpperCase()}</span>`;
+
   return `
     <div class="border border-blush p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6" data-order-id="${order.id}">
       <div class="flex-1 min-w-0">
@@ -254,9 +271,7 @@ function orderRowHtml(order) {
         <p class="text-[11px] text-ink/50 mt-1">${escapeHtml(order.reference)} · ${date}</p>
       </div>
       <p class="text-[14px] font-medium flex-shrink-0">${formatCurrency(order.amount)}</p>
-      <select data-role="status-select" class="label text-[10px] border border-blush px-3 py-2 bg-white flex-shrink-0">
-        ${ORDER_STATUSES.map((s) => `<option value="${s}" ${s === order.payment_status ? 'selected' : ''}>${s.toUpperCase()}</option>`).join('')}
-      </select>
+      ${action}
     </div>
   `;
 }
@@ -272,13 +287,18 @@ async function loadOrdersList() {
   ordersListStatusEl.textContent = orders.length ? '' : 'No orders yet.';
 }
 
-ordersListEl.addEventListener('change', async (e) => {
-  if (e.target.getAttribute('data-role') !== 'status-select') return;
+ordersListEl.addEventListener('click', async (e) => {
+  const action = e.target.getAttribute('data-action');
+  if (action !== 'sent' && action !== 'cancel') return;
   const card = e.target.closest('[data-order-id]');
   const id = card.getAttribute('data-order-id');
-  const { error } = await supabaseClient.from('orders').update({ payment_status: e.target.value }).eq('id', id);
+  const nextStatus = action === 'sent' ? 'paid' : 'cancelled';
+  const { error } = await supabaseClient.from('orders').update({ payment_status: nextStatus }).eq('id', id);
   ordersListStatusEl.textContent = error ? `Failed to update: ${error.message}` : 'Updated.';
-  if (!error) await loadAnalytics();
+  if (!error) {
+    await loadOrdersList();
+    await loadAnalytics();
+  }
 });
 
 function showAdmin() {

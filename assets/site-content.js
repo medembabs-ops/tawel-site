@@ -49,7 +49,10 @@ function renderLockScreen() {
   document.body.innerHTML = '';
 
   const main = document.createElement('main');
-  main.className = 'relative h-screen min-h-[640px] flex flex-col items-center justify-center overflow-hidden bg-ink text-ivory';
+  main.className = 'relative min-h-screen md:h-screen overflow-hidden bg-ink text-ivory grid md:grid-cols-2';
+
+  const brandPanel = document.createElement('div');
+  brandPanel.className = 'relative flex flex-col items-center justify-center overflow-hidden py-24 md:py-0';
 
   const gradient = document.createElement('div');
   gradient.className = 'absolute inset-0';
@@ -74,6 +77,12 @@ function renderLockScreen() {
   logo.className = 'wordmark-reversed wordmark-reveal w-[78vw] max-w-[560px] h-auto';
 
   content.append(logo);
-  main.append(gradient, grain, star, content);
+  brandPanel.append(gradient, grain, star, content);
+
+  const photoPanel = document.createElement('div');
+  photoPanel.className = 'duotone h-[45vh] md:h-auto bg-cover bg-top';
+  photoPanel.style.backgroundImage = `url('${SITE_CONTENT['images.lock_photo'] || 'assets/img/lock/model.png'}')`;
+
+  main.append(brandPanel, photoPanel);
   document.body.appendChild(main);
 }

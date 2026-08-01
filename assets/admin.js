@@ -38,6 +38,10 @@ const adminView = document.getElementById('admin-view');
 const logoutBtn = document.getElementById('logout-btn');
 const loginForm = document.getElementById('login-form');
 const loginError = document.getElementById('login-error');
+const analyticsStats = document.getElementById('analytics-stats');
+const ordersChartEl = document.getElementById('orders-chart');
+const guestlistChartEl = document.getElementById('guestlist-chart');
+const analyticsStatus = document.getElementById('analytics-status');
 const productsList = document.getElementById('products-list');
 const productsStatus = document.getElementById('products-status');
 const addProductBtn = document.getElementById('add-product-btn');
@@ -53,6 +57,116 @@ function showLogin() {
   loginView.classList.remove('hidden');
   adminView.classList.add('hidden');
   logoutBtn.classList.add('hidden');
+}
+
+function formatCurrency(n) {
+  return '$' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 2 });
+}
+
+// Plain-SVG bar chart — no charting library. `data` is [{ label, value }],
+// bars fill left to right, rounded at the top edge only (anchored flat to
+// the baseline), with the exact value available as a native hover tooltip.
+function renderBarChart(container, data) {
+  const width = 520;
+  const chartHeight = 120;
+  const barGap = 6;
+  const barWidth = (width - barGap * (data.length - 1)) / data.length;
+  const maxValue = Math.max(1, ...data.map((d) => d.value));
+  const radius = 4;
+
+  const bars = data.map((d, i) => {
+    const x = i * (barWidth + barGap);
+    const barHeight = (d.value / maxValue) * chartHeight;
+    const y = chartHeight - barHeight;
+    const r = Math.min(radius, barHeight);
+    const path = barHeight > 0
+      ? `M${x},${y + r} Q${x},${y} ${x + r},${y} L${x + barWidth - r},${y} Q${x + barWidth},${y} ${x + barWidth},${y + r} L${x + barWidth},${chartHeight} L${x},${chartHeight} Z`
+      : '';
+    return `
+      <path d="${path}" fill="#63010F">
+        <title>${escapeHtml(d.label)}: ${d.value}</title>
+      </path>
+      <text x="${x + barWidth / 2}" y="${chartHeight + 16}" font-size="9" fill="#1A1315" fill-opacity="0.5" text-anchor="middle" font-family="Montserrat, sans-serif">${escapeHtml(d.label)}</text>
+    `;
+  }).join('');
+
+  container.innerHTML = `
+    <svg viewBox="0 0 ${width} ${chartHeight + 24}" class="w-full h-auto">
+      <line x1="0" y1="${chartHeight}" x2="${width}" y2="${chartHeight}" stroke="#CAAAAA" stroke-width="1" />
+      ${bars}
+    </svg>
+  `;
+}
+
+function lastNDays(n) {
+  const days = [];
+  for (let i = n - 1; i >= 0; i -= 1) {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - i);
+    days.push(d);
+  }
+  return days;
+}
+
+function countByDay(rows, days) {
+  const counts = days.map(() => 0);
+  rows.forEach((row) => {
+    const rowDate = new Date(row.created_at);
+    rowDate.setHours(0, 0, 0, 0);
+    const idx = days.findIndex((d) => d.getTime() === rowDate.getTime());
+    if (idx !== -1) counts[idx] += 1;
+  });
+  return counts;
+}
+
+async function loadAnalytics() {
+  const [ordersRes, guestListRes] = await Promise.all([
+    supabaseClient.from('orders').select('amount, payment_status, created_at'),
+    supabaseClient.from('guest_list').select('email, created_at'),
+  ]);
+
+  if (ordersRes.error || guestListRes.error) {
+    analyticsStatus.textContent = `Failed to load analytics: ${(ordersRes.error || guestListRes.error).message}`;
+    return;
+  }
+
+  const orders = ordersRes.data || [];
+  const guestList = guestListRes.data || [];
+
+  const paidOrders = orders.filter((o) => o.payment_status === 'paid');
+  const pendingOrders = orders.filter((o) => o.payment_status === 'pending');
+  const revenue = paidOrders.reduce((sum, o) => sum + Number(o.amount), 0);
+
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  const recentSignups = guestList.filter((g) => new Date(g.created_at) >= weekAgo).length;
+
+  const stats = [
+    { label: 'Total orders', value: orders.length },
+    { label: 'Paid orders', value: paidOrders.length },
+    { label: 'Pending orders', value: pendingOrders.length },
+    { label: 'Revenue (paid)', value: formatCurrency(revenue) },
+    { label: 'Guest list signups', value: guestList.length },
+    { label: 'Signups — last 7 days', value: recentSignups },
+  ];
+
+  analyticsStats.innerHTML = stats.map((s) => `
+    <div class="border border-blush p-4">
+      <p class="font-display text-[26px] leading-none mb-1">${s.value}</p>
+      <p class="label text-[10px] text-ink/60">${s.label}</p>
+    </div>
+  `).join('');
+
+  const days = lastNDays(14);
+  const orderCounts = countByDay(orders, days);
+  const signupCounts = countByDay(guestList, days);
+  const dayLabels = days.map((d) => String(d.getDate()));
+
+  renderBarChart(ordersChartEl, dayLabels.map((label, i) => ({ label, value: orderCounts[i] })));
+  renderBarChart(guestlistChartEl, dayLabels.map((label, i) => ({ label, value: signupCounts[i] })));
+
+  analyticsStatus.textContent = '';
 }
 
 function showAdmin() {
@@ -314,7 +428,7 @@ loginForm.addEventListener('submit', async (e) => {
     return;
   }
   showAdmin();
-  await Promise.all([loadProductsPanel(), loadContentPanel(), loadLockStatus()]);
+  await Promise.all([loadProductsPanel(), loadContentPanel(), loadLockStatus(), loadAnalytics()]);
 });
 
 logoutBtn.addEventListener('click', async () => {
@@ -331,7 +445,7 @@ logoutBtn.addEventListener('click', async () => {
   const { data } = await supabaseClient.auth.getSession();
   if (data.session) {
     showAdmin();
-    await Promise.all([loadProductsPanel(), loadContentPanel(), loadLockStatus()]);
+    await Promise.all([loadProductsPanel(), loadContentPanel(), loadLockStatus(), loadAnalytics()]);
   } else {
     showLogin();
   }

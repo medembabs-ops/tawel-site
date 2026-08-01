@@ -209,27 +209,29 @@ function renderLockScreen() {
   main.style.backgroundColor = '#F5F5F5';
 
   const eyebrow = document.createElement('p');
-  eyebrow.className = 'font-display italic text-[13px] md:text-[15px] text-bordeaux text-center px-6 py-5';
+  eyebrow.className = 'font-display italic font-bold text-[13px] md:text-[15px] text-bordeaux text-center px-6 py-5';
+  eyebrow.style.transform = 'scaleX(1.4)';
+  eyebrow.style.transformOrigin = 'center';
   eyebrow.textContent = SITE_CONTENT['lock.eyebrow'] || 'Somethings are worth discovering before they are announced';
 
   const gridWrap = document.createElement('div');
-  gridWrap.className = 'relative flex-1 overflow-hidden grid md:grid-cols-2';
+  gridWrap.className = 'grain relative flex-1 overflow-hidden flex items-center justify-center px-6 py-10';
 
-  const brandPanel = document.createElement('div');
-  brandPanel.className = 'grain relative flex flex-col items-center justify-center overflow-hidden py-16 md:py-0';
+  const cluster = document.createElement('div');
+  cluster.className = 'flex flex-col md:flex-row items-center justify-center gap-8 md:gap-14';
 
   const content = document.createElement('div');
-  content.className = 'relative z-10 flex flex-col items-center px-6 text-center';
+  content.className = 'relative z-10 flex flex-col items-center text-center flex-shrink-0';
 
   const logo = document.createElement('img');
   logo.src = SITE_CONTENT['images.lock_logo'] || 'assets/img/lock/wordmark-maroon.png';
   logo.alt = 'Tawel Style';
-  logo.className = 'wordmark-reveal w-[78vw] max-w-[560px] h-auto';
+  logo.className = 'wordmark-reveal w-full max-w-[300px] h-auto';
 
   const tagline = document.createElement('img');
   tagline.src = SITE_CONTENT['images.lock_tagline'] || 'assets/img/lock/tagline-maroon.png';
   tagline.alt = 'To all we ever love';
-  tagline.className = 'w-[42vw] max-w-[256px] h-auto mt-1';
+  tagline.className = 'w-full max-w-[190px] h-auto mt-1';
 
   const subheading = document.createElement('p');
   subheading.className = 'text-[14px] md:text-[15px] text-ink/70 mt-6';
@@ -238,18 +240,14 @@ function renderLockScreen() {
   const cta = createGuestListCta(SITE_CONTENT['lock.cta'] || 'Join the guest list');
 
   content.append(logo, tagline, subheading, cta);
-  brandPanel.append(content);
-
-  const photoPanel = document.createElement('div');
-  photoPanel.className = 'relative h-[45vh] md:h-auto overflow-hidden';
 
   const photo = document.createElement('img');
   photo.src = SITE_CONTENT['images.lock_photo'] || 'assets/img/lock/model.png';
   photo.alt = '';
-  photo.className = 'w-full h-full object-cover object-top';
+  photo.className = 'w-[240px] md:w-[280px] aspect-[4/5] object-cover object-top flex-shrink-0';
 
-  photoPanel.appendChild(photo);
-  gridWrap.append(brandPanel, photoPanel);
+  cluster.append(content, photo);
+  gridWrap.appendChild(cluster);
   main.append(eyebrow, gridWrap);
   document.body.appendChild(main);
 }

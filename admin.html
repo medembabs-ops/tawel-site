@@ -41,6 +41,24 @@
     <!-- Admin panels -->
     <section id="admin-view" class="hidden space-y-16">
 
+      <div>
+        <div class="mb-6 pb-3 border-b border-blush">
+          <h2 class="label text-[11px] text-bordeaux">Analytics</h2>
+        </div>
+        <div id="analytics-stats" class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-10"></div>
+        <div class="grid md:grid-cols-2 gap-10">
+          <div>
+            <p class="label text-[10px] text-ink/60 mb-4">Orders — last 14 days</p>
+            <div id="orders-chart"></div>
+          </div>
+          <div>
+            <p class="label text-[10px] text-ink/60 mb-4">Guest list signups — last 14 days</p>
+            <div id="guestlist-chart"></div>
+          </div>
+        </div>
+        <p id="analytics-status" class="text-[13px] text-ink/60 mt-4"></p>
+      </div>
+
       <div class="flex items-center justify-between border border-blush p-6">
         <div>
           <h2 class="label text-[11px] text-bordeaux mb-1">Site status</h2>

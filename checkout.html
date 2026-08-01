@@ -18,9 +18,7 @@
       <p class="label text-[11px] text-bordeaux mb-4">Checkout</p>
       <h1 class="font-display text-[32px] md:text-[40px] leading-tight mb-4">Shipping Details</h1>
       <p class="text-[13px] text-ink/60 max-w-[52ch] mb-12">
-        This is a demonstration checkout — no payment is processed and no order is
-        sent anywhere. Connecting real payment (e.g. Stripe) requires a backend
-        and is not wired up yet.
+        Your order is saved, then you'll be taken to Paystack to complete payment securely.
       </p>
 
       <div class="grid md:grid-cols-[1.3fr_1fr] gap-16">
@@ -58,9 +56,10 @@
             </div>
           </div>
 
-          <button type="submit" class="label text-[11px] bg-bordeaux text-ivory px-8 py-4 hover:bg-bordeaux-dark transition-colors w-full">
+          <button type="submit" class="label text-[11px] bg-bordeaux text-ivory px-8 py-4 hover:bg-bordeaux-dark transition-colors w-full disabled:opacity-50">
             Place order
           </button>
+          <p id="checkout-error" class="hidden text-[13px] text-bordeaux"></p>
         </form>
 
         <div>
@@ -72,16 +71,6 @@
           </div>
         </div>
       </div>
-    </div>
-
-    <div id="confirmation-view" class="hidden text-center py-16 max-w-lg mx-auto">
-      <p class="label text-[11px] text-bordeaux mb-4">Order received</p>
-      <h1 class="font-display text-[32px] leading-tight mb-6">Thank you<span id="confirm-name"></span>.</h1>
-      <p class="text-[15px] text-ink/70 leading-relaxed mb-10">
-        This confirmation is illustrative — the order was recorded in your
-        browser only. No email was sent and no payment was taken.
-      </p>
-      <a href="shop.html" class="label text-[11px] underline-grow text-bordeaux">Continue shopping</a>
     </div>
 
   </div>
@@ -124,13 +113,80 @@
     });
     document.getElementById('summary-total').textContent = formatPrice(cartSubtotal());
 
-    document.getElementById('checkout-form').addEventListener('submit', (e) => {
+    document.getElementById('checkout-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const firstName = document.getElementById('first-name').value;
-      document.getElementById('confirm-name').textContent = firstName ? `, ${firstName}` : '';
-      document.getElementById('checkout-view').classList.add('hidden');
-      document.getElementById('confirmation-view').classList.remove('hidden');
+
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const errorEl = document.getElementById('checkout-error');
+      errorEl.classList.add('hidden');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Placing order…';
+
+      const firstName = document.getElementById('first-name').value.trim();
+      const lastName = document.getElementById('last-name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const reference = `TS-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const amount = cartSubtotal();
+
+      const order = {
+        reference,
+        customer_name: `${firstName} ${lastName}`.trim(),
+        customer_email: email,
+        shipping_address: {
+          address: document.getElementById('address').value.trim(),
+          city: document.getElementById('city').value.trim(),
+          postcode: document.getElementById('postcode').value.trim(),
+          country: document.getElementById('country').value.trim(),
+        },
+        items: lines.map((line) => ({
+          id: line.product.id,
+          name: line.product.name,
+          size: line.size,
+          qty: line.qty,
+          price: line.product.price,
+        })),
+        amount,
+        payment_status: 'pending',
+      };
+
+      const resetButton = () => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Place order';
+      };
+
+      const { error: insertError } = await supabaseClient.from('orders').insert(order);
+      if (insertError) {
+        errorEl.textContent = 'Could not save your order — please try again.';
+        errorEl.classList.remove('hidden');
+        resetButton();
+        return;
+      }
+
+      let initRes;
+      try {
+        initRes = await fetch('/api/paystack/initialize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reference, email, amount }),
+        });
+      } catch {
+        errorEl.textContent = 'Could not reach the payment service — please try again.';
+        errorEl.classList.remove('hidden');
+        resetButton();
+        return;
+      }
+
+      const initData = await initRes.json();
+
+      if (!initRes.ok || !initData.authorization_url) {
+        errorEl.textContent = initData.error || 'Payments are not connected yet — please check back soon. Your order has been saved.';
+        errorEl.classList.remove('hidden');
+        resetButton();
+        return;
+      }
+
       saveCart([]);
+      window.location.href = initData.authorization_url;
     });
     document.body.style.visibility = 'visible';
   })();

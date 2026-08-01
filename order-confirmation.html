@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<style>body{visibility:hidden}</style>
+<title>Order Confirmation — Tawel Style</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="assets/tailwind-config.js"></script>
+<link rel="stylesheet" href="assets/style.css" />
+</head>
+<body class="bg-ivory text-ink font-body">
+
+<main class="pt-40 pb-28 px-6 md:px-10 min-h-[60vh]">
+  <div class="max-w-lg mx-auto text-center">
+    <p class="label text-[11px] text-bordeaux mb-4">Thank you</p>
+    <h1 class="font-display text-[32px] leading-tight mb-6">We're confirming your payment.</h1>
+    <p class="text-[15px] text-ink/70 leading-relaxed mb-4">
+      Your order is saved and we're verifying the payment with Paystack now.
+      You'll receive a confirmation by email once it clears.
+    </p>
+    <p id="order-reference" class="text-[13px] text-ink/50 mb-10"></p>
+    <a href="shop.html" class="label text-[11px] underline-grow text-bordeaux">Continue shopping</a>
+  </div>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/supabase-client.js"></script>
+<script src="assets/products.js"></script>
+<script src="assets/site-content.js"></script>
+<script src="assets/main.js"></script>
+<script>
+  renderFooter();
+  renderIconDock({ centered: true });
+  renderHeaderDivider();
+
+  (async () => {
+    if (await isSiteLocked()) {
+      renderLockScreen();
+      document.body.style.visibility = 'visible';
+      return;
+    }
+
+    const reference = new URLSearchParams(location.search).get('reference');
+    if (reference) {
+      document.getElementById('order-reference').textContent = `Order reference: ${reference}`;
+    }
+
+    document.body.style.visibility = 'visible';
+  })();
+</script>
+</body>
+</html>

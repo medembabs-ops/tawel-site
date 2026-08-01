@@ -28,6 +28,19 @@ create table if not exists guest_list (
   created_at timestamptz not null default now()
 );
 
+create table if not exists orders (
+  id bigint generated always as identity primary key,
+  reference text not null unique,
+  customer_name text not null,
+  customer_email text not null,
+  shipping_address jsonb not null default '{}',
+  items jsonb not null default '[]',
+  amount numeric not null,
+  currency text not null default 'NGN',
+  payment_status text not null default 'pending' check (payment_status in ('pending', 'paid', 'failed')),
+  created_at timestamptz not null default now()
+);
+
 -- ============================================================
 -- Row Level Security
 -- ============================================================
@@ -35,6 +48,7 @@ create table if not exists guest_list (
 alter table products enable row level security;
 alter table site_content enable row level security;
 alter table guest_list enable row level security;
+alter table orders enable row level security;
 
 -- Public (storefront) can read everything.
 drop policy if exists "products readable by anyone" on products;
@@ -77,6 +91,29 @@ create policy "guest_list readable by authenticated"
   on guest_list for select
   to authenticated
   using (true);
+
+-- Orders: checkout can create its own order, always starting pending — it
+-- can never insert a row already marked paid. Only the webhook (using the
+-- Supabase service role key, which bypasses RLS entirely) marks one paid.
+-- The owner can read every order and, if needed, correct one by hand.
+drop policy if exists "orders insertable by anyone" on orders;
+create policy "orders insertable by anyone"
+  on orders for insert
+  to anon, authenticated
+  with check (payment_status = 'pending');
+
+drop policy if exists "orders readable by authenticated" on orders;
+create policy "orders readable by authenticated"
+  on orders for select
+  to authenticated
+  using (true);
+
+drop policy if exists "orders writable by authenticated" on orders;
+create policy "orders writable by authenticated"
+  on orders for update
+  to authenticated
+  using (true)
+  with check (true);
 
 -- ============================================================
 -- Storage — product images

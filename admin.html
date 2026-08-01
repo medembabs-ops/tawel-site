@@ -45,17 +45,35 @@
         <div class="mb-6 pb-3 border-b border-blush">
           <h2 class="label text-[11px] text-bordeaux">Analytics</h2>
         </div>
-        <div id="analytics-stats" class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-10"></div>
-        <div class="grid md:grid-cols-2 gap-10">
-          <div>
-            <p class="label text-[10px] text-ink/60 mb-4">Orders — last 14 days</p>
+
+        <div class="grid lg:grid-cols-3 gap-5 mb-5">
+          <div class="lg:col-span-2 border border-blush p-6">
+            <p class="label text-[10px] text-ink/60 mb-6">Orders — last 14 days</p>
             <div id="orders-chart"></div>
           </div>
-          <div>
-            <p class="label text-[10px] text-ink/60 mb-4">Guest list signups — last 14 days</p>
-            <div id="guestlist-chart"></div>
+
+          <div class="flex flex-col gap-5">
+            <div class="bg-ink text-ivory p-6 flex-1 flex flex-col justify-between">
+              <div>
+                <p class="label text-[10px] text-blush mb-2">Payment conversion</p>
+                <h4 class="font-display text-[19px] leading-snug">Paid vs. total orders</h4>
+              </div>
+              <div class="mt-8">
+                <span id="conversion-value" class="font-display text-[32px] leading-none block mb-2">—</span>
+                <div class="w-full h-1.5 bg-ivory/20 overflow-hidden">
+                  <div id="conversion-bar" class="h-full bg-gold" style="width:0%"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="border border-blush p-6">
+              <p class="label text-[10px] text-ink/60 mb-2">Guest list</p>
+              <p id="signup-growth-text" class="text-[14px] text-ink/80 leading-relaxed">—</p>
+            </div>
           </div>
         </div>
+
+        <div id="analytics-stats" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
         <p id="analytics-status" class="text-[13px] text-ink/60 mt-4"></p>
       </div>
 

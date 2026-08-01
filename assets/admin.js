@@ -40,8 +40,10 @@ const loginForm = document.getElementById('login-form');
 const loginError = document.getElementById('login-error');
 const analyticsStats = document.getElementById('analytics-stats');
 const ordersChartEl = document.getElementById('orders-chart');
-const guestlistChartEl = document.getElementById('guestlist-chart');
 const analyticsStatus = document.getElementById('analytics-status');
+const conversionValueEl = document.getElementById('conversion-value');
+const conversionBarEl = document.getElementById('conversion-bar');
+const signupGrowthTextEl = document.getElementById('signup-growth-text');
 const productsList = document.getElementById('products-list');
 const productsStatus = document.getElementById('products-status');
 const addProductBtn = document.getElementById('add-product-btn');
@@ -63,38 +65,76 @@ function formatCurrency(n) {
   return '$' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 2 });
 }
 
-// Plain-SVG bar chart — no charting library. `data` is [{ label, value }],
-// bars fill left to right, rounded at the top edge only (anchored flat to
-// the baseline), with the exact value available as a native hover tooltip.
-function renderBarChart(container, data) {
-  const width = 520;
-  const chartHeight = 120;
-  const barGap = 6;
-  const barWidth = (width - barGap * (data.length - 1)) / data.length;
+// Plain-SVG area chart — no charting library. `data` is [{ label, value }]:
+// a gradient-filled line, anchored to a baseline, with the exact value
+// available as a native hover tooltip on each point.
+function renderAreaChart(container, data) {
+  const width = 640;
+  const chartHeight = 140;
   const maxValue = Math.max(1, ...data.map((d) => d.value));
-  const radius = 4;
+  const stepX = data.length > 1 ? width / (data.length - 1) : 0;
 
-  const bars = data.map((d, i) => {
-    const x = i * (barWidth + barGap);
-    const barHeight = (d.value / maxValue) * chartHeight;
-    const y = chartHeight - barHeight;
-    const r = Math.min(radius, barHeight);
-    const path = barHeight > 0
-      ? `M${x},${y + r} Q${x},${y} ${x + r},${y} L${x + barWidth - r},${y} Q${x + barWidth},${y} ${x + barWidth},${y + r} L${x + barWidth},${chartHeight} L${x},${chartHeight} Z`
-      : '';
-    return `
-      <path d="${path}" fill="#63010F">
-        <title>${escapeHtml(d.label)}: ${d.value}</title>
-      </path>
-      <text x="${x + barWidth / 2}" y="${chartHeight + 16}" font-size="9" fill="#1A1315" fill-opacity="0.5" text-anchor="middle" font-family="Montserrat, sans-serif">${escapeHtml(d.label)}</text>
-    `;
-  }).join('');
+  const points = data.map((d, i) => [
+    data.length > 1 ? i * stepX : width / 2,
+    chartHeight - (d.value / maxValue) * chartHeight,
+  ]);
+
+  const linePath = points.map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
+  const areaPath = `${linePath} L${width},${chartHeight} L0,${chartHeight} Z`;
+
+  const dots = points.map(([x, y], i) => `
+    <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="#63010F">
+      <title>${escapeHtml(data[i].label)}: ${data[i].value}</title>
+    </circle>
+  `).join('');
+
+  const labels = points.map(([x], i) => `
+    <text x="${x.toFixed(1)}" y="${chartHeight + 16}" font-size="9" fill="#1A1315" fill-opacity="0.5" text-anchor="middle" font-family="Montserrat, sans-serif">${escapeHtml(data[i].label)}</text>
+  `).join('');
 
   container.innerHTML = `
     <svg viewBox="0 0 ${width} ${chartHeight + 24}" class="w-full h-auto">
+      <defs>
+        <linearGradient id="analytics-area-fill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#63010F" stop-opacity="0.3" />
+          <stop offset="100%" stop-color="#63010F" stop-opacity="0" />
+        </linearGradient>
+      </defs>
       <line x1="0" y1="${chartHeight}" x2="${width}" y2="${chartHeight}" stroke="#CAAAAA" stroke-width="1" />
-      ${bars}
+      <path d="${areaPath}" fill="url(#analytics-area-fill)" />
+      <path d="${linePath}" fill="none" stroke="#63010F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+      ${dots}
+      ${labels}
     </svg>
+  `;
+}
+
+// A ▲/▼ + percentage badge — never color alone, always paired with a sign
+// and arrow. `higherIsBetter` flips which direction reads as favorable
+// (e.g. more orders is good, more pending orders is not).
+function trendBadge(current, previous, higherIsBetter = true) {
+  if (previous === 0 && current === 0) return '';
+  if (previous === 0) {
+    return '<span class="label text-[9px] px-1.5 py-0.5 text-gold bg-gold/10 flex-shrink-0">▲ NEW</span>';
+  }
+  const pct = Math.round(((current - previous) / previous) * 100);
+  if (pct === 0) return '';
+  const isUp = pct > 0;
+  const favorable = isUp === higherIsBetter;
+  const color = favorable ? 'text-gold bg-gold/10' : 'text-bordeaux bg-bordeaux/10';
+  const arrow = isUp ? '▲' : '▼';
+  return `<span class="label text-[9px] px-1.5 py-0.5 ${color} flex-shrink-0">${arrow} ${Math.abs(pct)}%</span>`;
+}
+
+function statTileHtml(label, value, badge) {
+  return `
+    <div class="border border-blush p-4">
+      <p class="label text-[10px] text-ink/60 mb-2">${escapeHtml(label)}</p>
+      <div class="flex items-baseline justify-between gap-2">
+        <p class="font-display text-[24px] leading-none">${value}</p>
+        ${badge}
+      </div>
+    </div>
   `;
 }
 
@@ -138,33 +178,56 @@ async function loadAnalytics() {
   const pendingOrders = orders.filter((o) => o.payment_status === 'pending');
   const revenue = paidOrders.reduce((sum, o) => sum + Number(o.amount), 0);
 
-  const weekAgo = new Date();
+  const now = new Date();
+  const weekAgo = new Date(now);
   weekAgo.setDate(weekAgo.getDate() - 7);
-  const recentSignups = guestList.filter((g) => new Date(g.created_at) >= weekAgo).length;
+  const twoWeeksAgo = new Date(now);
+  twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
 
-  const stats = [
-    { label: 'Total orders', value: orders.length },
-    { label: 'Paid orders', value: paidOrders.length },
-    { label: 'Pending orders', value: pendingOrders.length },
-    { label: 'Revenue (paid)', value: formatCurrency(revenue) },
-    { label: 'Guest list signups', value: guestList.length },
-    { label: 'Signups — last 7 days', value: recentSignups },
+  const inRange = (rows, start, end) => rows.filter((r) => {
+    const t = new Date(r.created_at);
+    return t >= start && (!end || t < end);
+  });
+
+  const ordersThisWeek = inRange(orders, weekAgo);
+  const ordersLastWeek = inRange(orders, twoWeeksAgo, weekAgo);
+  const revenueThisWeek = inRange(paidOrders, weekAgo).reduce((s, o) => s + Number(o.amount), 0);
+  const revenueLastWeek = inRange(paidOrders, twoWeeksAgo, weekAgo).reduce((s, o) => s + Number(o.amount), 0);
+  const signupsThisWeek = inRange(guestList, weekAgo);
+  const signupsLastWeek = inRange(guestList, twoWeeksAgo, weekAgo);
+  const pendingThisWeek = inRange(pendingOrders, weekAgo);
+  const pendingLastWeek = inRange(pendingOrders, twoWeeksAgo, weekAgo);
+
+  // Payment conversion card.
+  const conversionRate = orders.length ? Math.round((paidOrders.length / orders.length) * 100) : 0;
+  conversionValueEl.textContent = orders.length ? `${conversionRate}%` : '—';
+  conversionBarEl.style.width = `${conversionRate}%`;
+
+  // Guest list insight card.
+  if (signupsLastWeek.length === 0 && signupsThisWeek.length === 0) {
+    signupGrowthTextEl.textContent = 'No signups yet — share the link once the site unlocks.';
+  } else if (signupsLastWeek.length === 0) {
+    signupGrowthTextEl.innerHTML = `<span class="text-ink font-semibold">${signupsThisWeek.length}</span> new signups this week.`;
+  } else {
+    const pct = Math.round(((signupsThisWeek.length - signupsLastWeek.length) / signupsLastWeek.length) * 100);
+    const direction = pct >= 0 ? 'up' : 'down';
+    signupGrowthTextEl.innerHTML = `<span class="text-ink font-semibold">${signupsThisWeek.length}</span> new signups this week, ${direction} <span class="text-ink font-semibold">${Math.abs(pct)}%</span> vs. last week.`;
+  }
+
+  // KPI row, each with a real week-over-week trend badge.
+  const tiles = [
+    statTileHtml('Total orders', orders.length, trendBadge(ordersThisWeek.length, ordersLastWeek.length, true)),
+    statTileHtml('Revenue (paid)', formatCurrency(revenue), trendBadge(revenueThisWeek, revenueLastWeek, true)),
+    statTileHtml('Guest list signups', guestList.length, trendBadge(signupsThisWeek.length, signupsLastWeek.length, true)),
+    statTileHtml('Pending orders', pendingOrders.length, trendBadge(pendingThisWeek.length, pendingLastWeek.length, false)),
   ];
+  analyticsStats.innerHTML = tiles.join('');
 
-  analyticsStats.innerHTML = stats.map((s) => `
-    <div class="border border-blush p-4">
-      <p class="font-display text-[26px] leading-none mb-1">${s.value}</p>
-      <p class="label text-[10px] text-ink/60">${s.label}</p>
-    </div>
-  `).join('');
-
+  // Main chart: orders per day, last 14 days.
   const days = lastNDays(14);
   const orderCounts = countByDay(orders, days);
-  const signupCounts = countByDay(guestList, days);
   const dayLabels = days.map((d) => String(d.getDate()));
-
-  renderBarChart(ordersChartEl, dayLabels.map((label, i) => ({ label, value: orderCounts[i] })));
-  renderBarChart(guestlistChartEl, dayLabels.map((label, i) => ({ label, value: signupCounts[i] })));
+  renderAreaChart(ordersChartEl, dayLabels.map((label, i) => ({ label, value: orderCounts[i] })));
 
   analyticsStatus.textContent = '';
 }

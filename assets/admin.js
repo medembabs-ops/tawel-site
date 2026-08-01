@@ -22,6 +22,10 @@ const IMAGE_LABELS = {
   'images.lock_logo': 'Locked page — logo',
   'images.lock_tagline': 'Locked page — tagline',
   'images.lock_photo': 'Locked page — photo',
+  'images.debut_1': 'Debut slider — photo 1',
+  'images.debut_2': 'Debut slider — photo 2',
+  'images.debut_3': 'Debut slider — photo 3',
+  'images.debut_4': 'Debut slider — photo 4',
   'lock.eyebrow': 'Locked page — top eyebrow line',
   'lock.subheading': 'Locked page — subheading',
   'lock.cta': 'Locked page — call to action',
@@ -52,12 +56,8 @@ const contentStatus = document.getElementById('content-status');
 const siteImagesList = document.getElementById('site-images-list');
 const lockStatusText = document.getElementById('lock-status-text');
 const lockToggleBtn = document.getElementById('lock-toggle-btn');
-const debutList = document.getElementById('debut-list');
-const debutStatus = document.getElementById('debut-status');
-const addDebutBtn = document.getElementById('add-debut-btn');
 
 let products = [];
-let debutItems = [];
 
 function showLogin() {
   loginView.classList.remove('hidden');
@@ -452,134 +452,6 @@ addProductBtn.addEventListener('click', () => {
   renderProducts();
 });
 
-function debutCardHtml(item) {
-  const isNew = !item.id;
-  return `
-    <div class="border border-blush p-5 flex flex-col md:flex-row gap-5" data-debut-id="${item.id || ''}" data-is-new="${isNew}">
-      <div class="w-full md:w-32 flex-shrink-0">
-        <img src="${item.image || 'https://placehold.co/240x300?text=No+image'}" alt="" class="w-full aspect-[4/5] object-cover bg-blush/20 mb-2" data-role="image-preview" />
-        <label class="label text-[10px] text-bordeaux underline-grow cursor-pointer">
-          Change photo
-          <input type="file" accept="image/*" class="hidden" data-field="image-upload" />
-        </label>
-        <p class="text-[11px] text-ink/50 mt-1" data-role="upload-status"></p>
-      </div>
-      <div class="flex-1 grid sm:grid-cols-2 gap-3">
-        <label class="block text-[12px] sm:col-span-2">
-          <span class="label text-[10px] text-ink/60 block mb-1">Name / label</span>
-          <input type="text" value="${escapeHtml(item.name)}" data-field="name" placeholder="e.g. New Drop — Wordmark Tank" class="w-full border border-blush focus:border-bordeaux outline-none px-3 py-2 text-[13px] bg-white" />
-        </label>
-        <label class="block text-[12px]">
-          <span class="label text-[10px] text-ink/60 block mb-1">Price (optional)</span>
-          <input type="number" step="0.01" value="${item.price ?? ''}" data-field="price" class="w-full border border-blush focus:border-bordeaux outline-none px-3 py-2 text-[13px] bg-white" />
-        </label>
-        <label class="block text-[12px]">
-          <span class="label text-[10px] text-ink/60 block mb-1">Links to (optional)</span>
-          <input type="text" value="${escapeHtml(item.link_url || '')}" data-field="link_url" placeholder="e.g. product.html?id=wordmark-tank-black" class="w-full border border-blush focus:border-bordeaux outline-none px-3 py-2 text-[13px] bg-white" />
-        </label>
-      </div>
-      <div class="flex md:flex-col gap-2 justify-end">
-        <button type="button" data-action="save" class="label text-[10px] bg-bordeaux text-ivory px-4 py-2 hover:bg-bordeaux-dark transition-colors">Save</button>
-        <button type="button" data-action="delete" class="label text-[10px] border border-blush px-4 py-2 hover:border-bordeaux hover:text-bordeaux transition-colors">Delete</button>
-      </div>
-    </div>
-  `;
-}
-
-function renderDebutItems() {
-  debutList.innerHTML = debutItems.map(debutCardHtml).join('');
-}
-
-function readDebutCardFields(card) {
-  const priceRaw = card.querySelector('[data-field="price"]').value;
-  return {
-    name: card.querySelector('[data-field="name"]').value.trim(),
-    price: priceRaw === '' ? null : parseFloat(priceRaw),
-    link_url: card.querySelector('[data-field="link_url"]').value.trim() || null,
-  };
-}
-
-async function loadDebutPanel() {
-  const { data, error } = await supabaseClient.from('debut_items').select('*').order('created_at', { ascending: true });
-  if (error) {
-    debutStatus.textContent = `Failed to load debut items: ${error.message}`;
-    return;
-  }
-  debutItems = data || [];
-  renderDebutItems();
-}
-
-debutList.addEventListener('click', async (e) => {
-  const card = e.target.closest('[data-debut-id], [data-is-new]');
-  if (!card) return;
-  const action = e.target.getAttribute('data-action');
-  if (!action) return;
-
-  if (action === 'save') {
-    const fields = readDebutCardFields(card);
-    const isNew = card.getAttribute('data-is-new') === 'true';
-    const existingId = card.getAttribute('data-debut-id');
-
-    if (!fields.name) {
-      debutStatus.textContent = 'Enter a name/label before saving.';
-      return;
-    }
-
-    const imagePreview = card.querySelector('[data-role="image-preview"]').getAttribute('src');
-    const image = imagePreview.startsWith('https://placehold.co') ? null : imagePreview;
-
-    const { error } = isNew
-      ? await supabaseClient.from('debut_items').insert({ ...fields, image })
-      : await supabaseClient.from('debut_items').update({ ...fields, image }).eq('id', existingId);
-
-    debutStatus.textContent = error ? `Save failed: ${error.message}` : `Saved "${fields.name}".`;
-    if (!error) await loadDebutPanel();
-  }
-
-  if (action === 'delete') {
-    const existingId = card.getAttribute('data-debut-id');
-    if (!existingId) {
-      card.remove();
-      return;
-    }
-    if (e.target.getAttribute('data-confirm') !== 'true') {
-      e.target.textContent = 'Click again to confirm';
-      e.target.setAttribute('data-confirm', 'true');
-      return;
-    }
-    const { error } = await supabaseClient.from('debut_items').delete().eq('id', existingId);
-    debutStatus.textContent = error ? `Delete failed: ${error.message}` : 'Item deleted.';
-    if (!error) await loadDebutPanel();
-  }
-});
-
-debutList.addEventListener('change', async (e) => {
-  if (e.target.getAttribute('data-field') !== 'image-upload') return;
-  const card = e.target.closest('[data-debut-id], [data-is-new]');
-  const file = e.target.files[0];
-  if (!file) return;
-
-  const uploadStatus = card.querySelector('[data-role="upload-status"]');
-  const preview = card.querySelector('[data-role="image-preview"]');
-  uploadStatus.textContent = 'Uploading…';
-
-  const path = `${Date.now()}-${slugify(file.name)}`;
-  const { error: uploadError } = await supabaseClient.storage.from('product-images').upload(path, file);
-  if (uploadError) {
-    uploadStatus.textContent = `Upload failed: ${uploadError.message}`;
-    return;
-  }
-
-  const { data } = supabaseClient.storage.from('product-images').getPublicUrl(path);
-  preview.setAttribute('src', data.publicUrl);
-  uploadStatus.textContent = 'Uploaded — click Save to apply.';
-});
-
-addDebutBtn.addEventListener('click', () => {
-  debutItems.unshift({ id: null, name: '', price: null, image: '', link_url: '' });
-  renderDebutItems();
-});
-
 contentForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const rows = [...contentForm.querySelectorAll('[data-key]')].map((el) => ({
@@ -623,7 +495,7 @@ loginForm.addEventListener('submit', async (e) => {
     return;
   }
   showAdmin();
-  await Promise.all([loadProductsPanel(), loadDebutPanel(), loadContentPanel(), loadLockStatus(), loadAnalytics()]);
+  await Promise.all([loadProductsPanel(), loadContentPanel(), loadLockStatus(), loadAnalytics()]);
 });
 
 logoutBtn.addEventListener('click', async () => {
@@ -640,7 +512,7 @@ logoutBtn.addEventListener('click', async () => {
   const { data } = await supabaseClient.auth.getSession();
   if (data.session) {
     showAdmin();
-    await Promise.all([loadProductsPanel(), loadDebutPanel(), loadContentPanel(), loadLockStatus(), loadAnalytics()]);
+    await Promise.all([loadProductsPanel(), loadContentPanel(), loadLockStatus(), loadAnalytics()]);
   } else {
     showLogin();
   }

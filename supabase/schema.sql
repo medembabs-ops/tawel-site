@@ -28,16 +28,6 @@ create table if not exists guest_list (
   created_at timestamptz not null default now()
 );
 
-create table if not exists debut_items (
-  id bigint generated always as identity primary key,
-  name text not null,
-  price numeric,
-  image text,
-  link_url text,
-  sort_order integer not null default 0,
-  created_at timestamptz not null default now()
-);
-
 create table if not exists orders (
   id bigint generated always as identity primary key,
   reference text not null unique,
@@ -58,7 +48,6 @@ create table if not exists orders (
 alter table products enable row level security;
 alter table site_content enable row level security;
 alter table guest_list enable row level security;
-alter table debut_items enable row level security;
 alter table orders enable row level security;
 
 -- Public (storefront) can read everything.
@@ -85,22 +74,6 @@ create policy "products writable by authenticated"
 drop policy if exists "site_content writable by authenticated" on site_content;
 create policy "site_content writable by authenticated"
   on site_content for all
-  to authenticated
-  using (true)
-  with check (true);
-
--- Debut/featured items: a curated set shown in the homepage slider,
--- separate from the main catalog — for spotlighting new drops or sales
--- without touching the actual product listings.
-drop policy if exists "debut_items readable by anyone" on debut_items;
-create policy "debut_items readable by anyone"
-  on debut_items for select
-  to anon, authenticated
-  using (true);
-
-drop policy if exists "debut_items writable by authenticated" on debut_items;
-create policy "debut_items writable by authenticated"
-  on debut_items for all
   to authenticated
   using (true)
   with check (true);
@@ -210,6 +183,10 @@ insert into site_content (key, value) values
   ('images.lock_logo', 'assets/img/lock/wordmark-maroon.png'),
   ('images.lock_tagline', 'assets/img/lock/tagline-maroon.png'),
   ('images.lock_photo', 'assets/img/lock/model.png'),
+  ('images.debut_1', 'assets/img/products/wordmark-tank-black.png'),
+  ('images.debut_2', 'assets/img/products/wordmark-tank-white.png'),
+  ('images.debut_3', 'assets/img/products/rugby-polo-burgundy.png'),
+  ('images.debut_4', 'assets/img/products/rugby-polo-green.png'),
   ('lock.eyebrow', 'Somethings are worth discovering before they are announced'),
   ('lock.subheading', 'Preparing for it''s first chapter'),
   ('lock.cta', 'Join the guest list'),

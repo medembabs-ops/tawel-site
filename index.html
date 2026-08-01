@@ -124,28 +124,21 @@
       return;
     }
 
-    const [, , debutRes] = await Promise.all([
-      loadProducts(),
-      loadSiteContent(),
-      supabaseClient ? supabaseClient.from('debut_items').select('*').order('created_at', { ascending: true }) : Promise.resolve({ data: [] }),
-    ]);
+    await Promise.all([loadProducts(), loadSiteContent()]);
     applySiteContent();
 
-    // The DEBUT slider is curated separately from the catalog (new drops,
-    // sale spotlights) via the admin panel — falls back to regular products
-    // if nothing's been curated yet.
-    const debutItems = debutRes?.data || [];
-    const debutSource = debutItems.length
-      ? debutItems.map((d) => ({ name: d.name, price: d.price, image: d.image, href: d.link_url || 'shop.html' }))
-      : PRODUCTS.map((p) => ({ name: p.name, price: p.price, image: p.image, href: `product.html?id=${p.id}` }));
+    // The DEBUT slider's photos are plain image slots (images.debut_1..4),
+    // editable from the admin panel's Site images section, same as any
+    // other site image — swap in a new drop or sale photo any time.
+    const debutPhotos = ['images.debut_1', 'images.debut_2', 'images.debut_3', 'images.debut_4']
+      .map((key) => SITE_CONTENT[key])
+      .filter(Boolean);
 
     const arrivalsTrack = document.getElementById('arrivals-track');
-    [...debutSource, ...debutSource].forEach((item) => {
+    [...debutPhotos, ...debutPhotos].forEach((image) => {
       arrivalsTrack.insertAdjacentHTML('beforeend', `
-        <a href="${item.href}" class="infinite-slider-item group block">
-          <img src="${item.image || 'https://placehold.co/420x525?text=Tawel+Style'}" alt="${item.name}" loading="lazy" />
-          <p class="text-[12px] mt-2 leading-snug group-hover:text-bordeaux transition-colors">${item.name}</p>
-          ${item.price != null ? `<p class="text-[12px] text-ink/60">${formatPrice(item.price)}</p>` : ''}
+        <a href="shop.html" class="infinite-slider-item group block">
+          <img src="${image}" alt="Tawel Style — debut" loading="lazy" />
         </a>
       `);
     });

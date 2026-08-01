@@ -218,7 +218,7 @@ function renderLockScreen() {
   gridWrap.className = 'relative flex-1 overflow-hidden grid md:grid-cols-2';
 
   const brandPanel = document.createElement('div');
-  brandPanel.className = 'grain relative flex flex-col items-center justify-center overflow-hidden py-16 md:py-0';
+  brandPanel.className = 'grain relative flex flex-col items-center md:items-end justify-center overflow-hidden py-16 md:py-0';
 
   const content = document.createElement('div');
   content.className = 'relative z-10 flex flex-col items-center px-6 text-center';

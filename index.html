@@ -127,16 +127,33 @@
     await Promise.all([loadProducts(), loadSiteContent()]);
     applySiteContent();
 
+    // DEBUT slider photos are plain image slots (images.debut_1..4),
+    // editable from the admin panel's Debut section — falls back to
+    // regular product photos if they haven't been set up yet.
+    const debutPhotos = ['images.debut_1', 'images.debut_2', 'images.debut_3', 'images.debut_4']
+      .map((key) => SITE_CONTENT[key])
+      .filter(Boolean);
+
     const arrivalsTrack = document.getElementById('arrivals-track');
-    [...PRODUCTS, ...PRODUCTS].forEach((p) => {
-      arrivalsTrack.insertAdjacentHTML('beforeend', `
-        <a href="product.html?id=${p.id}" class="infinite-slider-item group block">
-          <img src="${p.image}" alt="${p.name}" loading="lazy" />
-          <p class="text-[12px] mt-2 leading-snug group-hover:text-bordeaux transition-colors">${p.name}</p>
-          <p class="text-[12px] text-ink/60">${formatPrice(p.price)}</p>
-        </a>
-      `);
-    });
+    if (debutPhotos.length) {
+      [...debutPhotos, ...debutPhotos].forEach((image) => {
+        arrivalsTrack.insertAdjacentHTML('beforeend', `
+          <a href="shop.html" class="infinite-slider-item group block">
+            <img src="${image}" alt="Tawel Style — debut" loading="lazy" />
+          </a>
+        `);
+      });
+    } else {
+      [...PRODUCTS, ...PRODUCTS].forEach((p) => {
+        arrivalsTrack.insertAdjacentHTML('beforeend', `
+          <a href="product.html?id=${p.id}" class="infinite-slider-item group block">
+            <img src="${p.image}" alt="${p.name}" loading="lazy" />
+            <p class="text-[12px] mt-2 leading-snug group-hover:text-bordeaux transition-colors">${p.name}</p>
+            <p class="text-[12px] text-ink/60">${formatPrice(p.price)}</p>
+          </a>
+        `);
+      });
+    }
     initPlates();
     initInfiniteSliders();
     document.body.style.visibility = 'visible';

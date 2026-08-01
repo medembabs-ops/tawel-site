@@ -37,9 +37,15 @@ create table if not exists orders (
   items jsonb not null default '[]',
   amount numeric not null,
   currency text not null default 'NGN',
-  payment_status text not null default 'pending' check (payment_status in ('pending', 'paid', 'failed')),
+  payment_status text not null default 'pending' check (payment_status in ('pending', 'paid', 'failed', 'cancelled')),
   created_at timestamptz not null default now()
 );
+
+-- Widen the status check for tables created before "cancelled" existed —
+-- harmless no-op if the table was just created above with it already.
+alter table orders drop constraint if exists orders_payment_status_check;
+alter table orders add constraint orders_payment_status_check
+  check (payment_status in ('pending', 'paid', 'failed', 'cancelled'));
 
 -- ============================================================
 -- Row Level Security
@@ -183,6 +189,10 @@ insert into site_content (key, value) values
   ('images.lock_logo', 'assets/img/lock/wordmark-maroon.png'),
   ('images.lock_tagline', 'assets/img/lock/tagline-maroon.png'),
   ('images.lock_photo', 'assets/img/lock/model.png'),
+  ('images.debut_1', 'assets/img/products/wordmark-tank-black.png'),
+  ('images.debut_2', 'assets/img/products/wordmark-tank-white.png'),
+  ('images.debut_3', 'assets/img/products/rugby-polo-burgundy.png'),
+  ('images.debut_4', 'assets/img/products/rugby-polo-green.png'),
   ('lock.eyebrow', 'Somethings are worth discovering before they are announced'),
   ('lock.subheading', 'Preparing for it''s first chapter'),
   ('lock.cta', 'Join the guest list'),

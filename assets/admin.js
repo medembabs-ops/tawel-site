@@ -22,6 +22,10 @@ const IMAGE_LABELS = {
   'images.lock_logo': 'Locked page — logo',
   'images.lock_tagline': 'Locked page — tagline',
   'images.lock_photo': 'Locked page — photo',
+  'images.debut_1': 'Debut slider — photo 1',
+  'images.debut_2': 'Debut slider — photo 2',
+  'images.debut_3': 'Debut slider — photo 3',
+  'images.debut_4': 'Debut slider — photo 4',
   'lock.eyebrow': 'Locked page — top eyebrow line',
   'lock.subheading': 'Locked page — subheading',
   'lock.cta': 'Locked page — call to action',
@@ -50,8 +54,11 @@ const addProductBtn = document.getElementById('add-product-btn');
 const contentForm = document.getElementById('content-form');
 const contentStatus = document.getElementById('content-status');
 const siteImagesList = document.getElementById('site-images-list');
+const debutImagesList = document.getElementById('debut-images-list');
 const lockStatusText = document.getElementById('lock-status-text');
 const lockToggleBtn = document.getElementById('lock-toggle-btn');
+const ordersListEl = document.getElementById('orders-list');
+const ordersListStatusEl = document.getElementById('orders-list-status');
 
 let products = [];
 
@@ -176,6 +183,7 @@ async function loadAnalytics() {
 
   const paidOrders = orders.filter((o) => o.payment_status === 'paid');
   const pendingOrders = orders.filter((o) => o.payment_status === 'pending');
+  const cancelledOrders = orders.filter((o) => o.payment_status === 'cancelled');
   const revenue = paidOrders.reduce((sum, o) => sum + Number(o.amount), 0);
 
   const now = new Date();
@@ -197,6 +205,8 @@ async function loadAnalytics() {
   const signupsLastWeek = inRange(guestList, twoWeeksAgo, weekAgo);
   const pendingThisWeek = inRange(pendingOrders, weekAgo);
   const pendingLastWeek = inRange(pendingOrders, twoWeeksAgo, weekAgo);
+  const cancelledThisWeek = inRange(cancelledOrders, weekAgo);
+  const cancelledLastWeek = inRange(cancelledOrders, twoWeeksAgo, weekAgo);
 
   // Payment conversion card.
   const conversionRate = orders.length ? Math.round((paidOrders.length / orders.length) * 100) : 0;
@@ -220,6 +230,7 @@ async function loadAnalytics() {
     statTileHtml('Revenue (paid)', formatCurrency(revenue), trendBadge(revenueThisWeek, revenueLastWeek, true)),
     statTileHtml('Guest list signups', guestList.length, trendBadge(signupsThisWeek.length, signupsLastWeek.length, true)),
     statTileHtml('Pending orders', pendingOrders.length, trendBadge(pendingThisWeek.length, pendingLastWeek.length, false)),
+    statTileHtml('Cancelled orders', cancelledOrders.length, trendBadge(cancelledThisWeek.length, cancelledLastWeek.length, false)),
   ];
   analyticsStats.innerHTML = tiles.join('');
 
@@ -231,6 +242,44 @@ async function loadAnalytics() {
 
   analyticsStatus.textContent = '';
 }
+
+const ORDER_STATUSES = ['pending', 'paid', 'cancelled', 'failed'];
+
+function orderRowHtml(order) {
+  const date = new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return `
+    <div class="border border-blush p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6" data-order-id="${order.id}">
+      <div class="flex-1 min-w-0">
+        <p class="text-[13px] truncate">${escapeHtml(order.customer_name)} — <span class="text-ink/60">${escapeHtml(order.customer_email)}</span></p>
+        <p class="text-[11px] text-ink/50 mt-1">${escapeHtml(order.reference)} · ${date}</p>
+      </div>
+      <p class="text-[14px] font-medium flex-shrink-0">${formatCurrency(order.amount)}</p>
+      <select data-role="status-select" class="label text-[10px] border border-blush px-3 py-2 bg-white flex-shrink-0">
+        ${ORDER_STATUSES.map((s) => `<option value="${s}" ${s === order.payment_status ? 'selected' : ''}>${s.toUpperCase()}</option>`).join('')}
+      </select>
+    </div>
+  `;
+}
+
+async function loadOrdersList() {
+  const { data, error } = await supabaseClient.from('orders').select('*').order('created_at', { ascending: false }).limit(50);
+  if (error) {
+    ordersListStatusEl.textContent = `Failed to load orders: ${error.message}`;
+    return;
+  }
+  const orders = data || [];
+  ordersListEl.innerHTML = orders.map(orderRowHtml).join('');
+  ordersListStatusEl.textContent = orders.length ? '' : 'No orders yet.';
+}
+
+ordersListEl.addEventListener('change', async (e) => {
+  if (e.target.getAttribute('data-role') !== 'status-select') return;
+  const card = e.target.closest('[data-order-id]');
+  const id = card.getAttribute('data-order-id');
+  const { error } = await supabaseClient.from('orders').update({ payment_status: e.target.value }).eq('id', id);
+  ordersListStatusEl.textContent = error ? `Failed to update: ${error.message}` : 'Updated.';
+  if (!error) await loadAnalytics();
+});
 
 function showAdmin() {
   loginView.classList.add('hidden');
@@ -325,9 +374,11 @@ async function loadContentPanel() {
     return;
   }
   const rows = data || [];
-  const imageRows = rows.filter((row) => row.key.startsWith('images.'));
+  const debutRows = rows.filter((row) => row.key.startsWith('images.debut_'));
+  const imageRows = rows.filter((row) => row.key.startsWith('images.') && !row.key.startsWith('images.debut_'));
   const textRows = rows.filter((row) => !row.key.startsWith('images.') && row.key !== 'site.locked');
 
+  debutImagesList.innerHTML = debutRows.map(siteImageCardHtml).join('');
   siteImagesList.innerHTML = imageRows.map(siteImageCardHtml).join('');
 
   contentForm.innerHTML = textRows
@@ -346,7 +397,7 @@ async function loadContentPanel() {
     .join('');
 }
 
-siteImagesList.addEventListener('change', async (e) => {
+async function handleSiteImageUpload(e) {
   if (e.target.getAttribute('data-role') !== 'image-upload') return;
   const card = e.target.closest('[data-image-key]');
   const key = card.getAttribute('data-image-key');
@@ -372,7 +423,10 @@ siteImagesList.addEventListener('change', async (e) => {
   }
   preview.setAttribute('src', publicData.publicUrl);
   uploadStatus.textContent = 'Updated — live on the site now.';
-});
+}
+
+siteImagesList.addEventListener('change', handleSiteImageUpload);
+debutImagesList.addEventListener('change', handleSiteImageUpload);
 
 productsList.addEventListener('click', async (e) => {
   const card = e.target.closest('[data-product-id], [data-is-new]');
@@ -491,7 +545,7 @@ loginForm.addEventListener('submit', async (e) => {
     return;
   }
   showAdmin();
-  await Promise.all([loadProductsPanel(), loadContentPanel(), loadLockStatus(), loadAnalytics()]);
+  await Promise.all([loadProductsPanel(), loadContentPanel(), loadLockStatus(), loadAnalytics(), loadOrdersList()]);
 });
 
 logoutBtn.addEventListener('click', async () => {
@@ -508,7 +562,7 @@ logoutBtn.addEventListener('click', async () => {
   const { data } = await supabaseClient.auth.getSession();
   if (data.session) {
     showAdmin();
-    await Promise.all([loadProductsPanel(), loadContentPanel(), loadLockStatus(), loadAnalytics()]);
+    await Promise.all([loadProductsPanel(), loadContentPanel(), loadLockStatus(), loadAnalytics(), loadOrdersList()]);
   } else {
     showLogin();
   }

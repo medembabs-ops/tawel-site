@@ -18,7 +18,13 @@ body {
   background-color: var(--ivory);
   color: var(--ink);
   font-family: 'Inter', sans-serif;
-  cursor: url('img/cursor/star-32.png') 16 16, auto;
+}
+
+/* Keep the star cursor everywhere, including on buttons/links, which
+   Tailwind's base styles (and our own cursor-pointer utility classes)
+   would otherwise switch to the browser's default hand/pointer cursor. */
+*, *::before, *::after {
+  cursor: url('img/cursor/star-32.png') 16 16, auto !important;
 }
 
 /* Paper grain — a quiet textile texture over ivory grounds, never over imagery */

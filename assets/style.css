@@ -265,27 +265,34 @@ details.admin-accordion[open] .chevron {
 }
 
 /* Infinite auto-scrolling strip — vanilla stand-in for a marquee/slider
-   component. Content is rendered twice by the page script for a seamless
-   loop; assets/main.js auto-advances el.scrollLeft via requestAnimationFrame
-   and eases to data-hover-speed on hover — but it's a real scroll container,
-   so a visitor can grab it (drag, wheel, touch, trackpad) and scroll it
-   themselves at any time; the auto-advance quietly resumes once they stop. */
+   component. Content is rendered twice by the page script (so the loop
+   point falls at exactly 50% of the track) and the whole thing runs on a
+   plain CSS transform animation rather than a JS-driven scrollLeft loop —
+   that JS version (requestAnimationFrame) turned out to silently stop
+   advancing on real devices with system-level power-saving active (e.g.
+   macOS/iOS Low Power Mode throttles JS timers browser-wide), which a
+   compositor-driven CSS animation isn't subject to. assets/main.js only
+   sets each track's animation-duration, from its data-speed attribute, so
+   admins can still tune how fast it runs. Hover pauses it via plain CSS,
+   no JS needed. */
 .infinite-slider {
-  overflow-x: auto;
-  overflow-y: hidden;
-  scroll-behavior: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
+  overflow: hidden;
   -webkit-mask-image: linear-gradient(90deg, transparent, black 4%, black 96%, transparent);
   mask-image: linear-gradient(90deg, transparent, black 4%, black 96%, transparent);
-}
-.infinite-slider::-webkit-scrollbar {
-  display: none;
 }
 .infinite-slider-track {
   display: flex;
   width: max-content;
   gap: 1.5rem;
+  animation: infinite-slider-scroll linear infinite;
+  animation-duration: 40s; /* overridden per-slider by main.js from data-speed */
+}
+.infinite-slider:hover .infinite-slider-track {
+  animation-play-state: paused;
+}
+@keyframes infinite-slider-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
 }
 .infinite-slider-item {
   flex: 0 0 auto;

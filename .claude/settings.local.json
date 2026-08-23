@@ -163,7 +163,11 @@
       "Bash(node _verify2.mjs)",
       "Bash(node _verify3.mjs)",
       "Bash(node _verify4.mjs)",
-      "Bash(node _verify5.mjs)"
+      "Bash(node _verify5.mjs)",
+      "Bash(node _verify6.mjs)",
+      "Bash(node _verify7.mjs)",
+      "Bash(rm -f _verify7.mjs _verify7b.mjs)",
+      "Bash(node screenshot.mjs http://localhost:3000 debut-css-marquee)"
     ]
   }
 }

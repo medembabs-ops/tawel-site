@@ -38,6 +38,17 @@ function humanizeKey(key) {
   return `${section[0].toUpperCase()}${section.slice(1)} — ${field.replace(/_/g, ' ')}`;
 }
 
+// Known text keys that should always show up in Site copy, with their
+// fallback wording — same self-healing idea as the image tiles above: a
+// key added to the site after the initial Supabase seed ran would
+// otherwise never appear here to be edited until its site_content row
+// happens to exist. Saving (contentForm's submit handler) already upserts,
+// so this only affects what's rendered, not how it's saved.
+const KNOWN_TEXT_DEFAULTS = {
+  'vault.heading': 'For the beautiful life',
+  'vault.subheading': 'An ongoing archive, added to as it happens.',
+};
+
 const loginView = document.getElementById('login-view');
 const adminView = document.getElementById('admin-view');
 const logoutBtn = document.getElementById('logout-btn');
@@ -466,7 +477,13 @@ async function loadContentPanel() {
   const debutRows = allImageKeys.filter((key) => key.startsWith('images.debut_')).sort().map(asRow);
   const debutSubtitleRows = rows.filter((row) => row.key.startsWith('debut.subtitle_'));
   const imageRows = allImageKeys.filter((key) => !key.startsWith('images.debut_')).sort().map(asRow);
-  const textRows = rows.filter((row) => !row.key.startsWith('images.') && !row.key.startsWith('debut.subtitle_') && row.key !== 'site.locked');
+
+  const dbTextRows = rows.filter((row) => !row.key.startsWith('images.') && !row.key.startsWith('debut.subtitle_') && row.key !== 'site.locked');
+  const dbTextKeys = new Set(dbTextRows.map((row) => row.key));
+  const missingTextRows = Object.keys(KNOWN_TEXT_DEFAULTS)
+    .filter((key) => !dbTextKeys.has(key))
+    .map((key) => ({ key, value: KNOWN_TEXT_DEFAULTS[key] }));
+  const textRows = [...dbTextRows, ...missingTextRows];
 
   debutImagesList.innerHTML = debutRows
     .map((row, i) => debutCardHtml(row, debutSubtitleRows.find((s) => s.key === `debut.subtitle_${i + 1}`), i + 1))

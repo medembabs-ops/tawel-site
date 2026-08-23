@@ -13,8 +13,13 @@
 
 <main class="pt-32 pb-28 px-6 md:px-10 min-h-[60vh]">
   <div class="max-w-4xl mx-auto">
-    <p class="label text-[11px] text-bordeaux mb-4">Cart</p>
-    <h1 class="font-display text-[32px] md:text-[40px] leading-tight mb-12">Your Selection</h1>
+    <div class="flex items-end justify-between gap-6 mb-12">
+      <div>
+        <p class="label text-[11px] text-bordeaux mb-4">Cart</p>
+        <h1 class="font-display text-[32px] md:text-[40px] leading-tight">Your Selection</h1>
+      </div>
+      <button id="clear-cart-btn" type="button" class="hidden label text-[11px] text-ink/50 underline-grow hover:text-bordeaux transition-colors flex-shrink-0 mb-1">Clear cart</button>
+    </div>
 
     <div id="cart-items" class="divide-y divide-blush border-y border-blush"></div>
 
@@ -46,6 +51,8 @@
   renderIconDock({ centered: true });
   renderHeaderDivider();
 
+  const clearCartBtn = document.getElementById('clear-cart-btn');
+
   function renderCart() {
     const lines = cartLines();
     const itemsWrap = document.getElementById('cart-items');
@@ -57,12 +64,14 @@
       empty.classList.remove('hidden');
       summary.classList.add('hidden');
       itemsWrap.classList.add('hidden');
+      clearCartBtn.classList.add('hidden');
       return;
     }
 
     itemsWrap.classList.remove('hidden');
     empty.classList.add('hidden');
     summary.classList.remove('hidden');
+    clearCartBtn.classList.remove('hidden');
 
     lines.forEach((line) => {
       itemsWrap.insertAdjacentHTML('beforeend', `
@@ -105,6 +114,12 @@
       });
     });
   }
+
+  clearCartBtn.addEventListener('click', () => {
+    if (!confirm('Remove everything from your cart?')) return;
+    clearCart();
+    renderCart();
+  });
 
   (async () => {
     if (await isSiteLocked()) {

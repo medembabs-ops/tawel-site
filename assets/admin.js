@@ -60,6 +60,8 @@ const lockStatusText = document.getElementById('lock-status-text');
 const lockToggleBtn = document.getElementById('lock-toggle-btn');
 const ordersListEl = document.getElementById('orders-list');
 const ordersListStatusEl = document.getElementById('orders-list-status');
+const newsletterListEl = document.getElementById('newsletter-list');
+const newsletterListStatusEl = document.getElementById('newsletter-list-status');
 
 let products = [];
 
@@ -301,6 +303,32 @@ ordersListEl.addEventListener('click', async (e) => {
   }
 });
 
+function newsletterRowHtml(entry, isNew) {
+  const date = new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return `
+    <div class="border border-blush p-4 flex items-center justify-between gap-4">
+      <p class="text-[13px] truncate">${escapeHtml(entry.email)}</p>
+      <div class="flex items-center gap-3 flex-shrink-0">
+        ${isNew ? '<span class="label text-[9px] px-1.5 py-0.5 text-gold bg-gold/10">NEW THIS WEEK</span>' : ''}
+        <p class="text-[11px] text-ink/50">${date}</p>
+      </div>
+    </div>
+  `;
+}
+
+async function loadNewsletterSignups() {
+  const { data, error } = await supabaseClient.from('guest_list').select('email, created_at').order('created_at', { ascending: false });
+  if (error) {
+    newsletterListStatusEl.textContent = `Failed to load signups: ${error.message}`;
+    return;
+  }
+  const entries = data || [];
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  newsletterListEl.innerHTML = entries.map((entry) => newsletterRowHtml(entry, new Date(entry.created_at) >= weekAgo)).join('');
+  newsletterListStatusEl.textContent = entries.length ? '' : 'No signups yet.';
+}
+
 function showAdmin() {
   loginView.classList.add('hidden');
   adminView.classList.remove('hidden');
@@ -387,6 +415,30 @@ function siteImageCardHtml(row) {
   `;
 }
 
+// Same as siteImageCardHtml, plus a subtitle field for the caption shown
+// below this slot in the homepage DEBUT slider. subtitleRow may be absent
+// (row hasn't been created in site_content yet) — the field still renders,
+// keyed off the slot's own index, and creates the row on first save.
+function debutCardHtml(imageRow, subtitleRow, index) {
+  const subtitleKey = subtitleRow ? subtitleRow.key : `debut.subtitle_${index}`;
+  const subtitleValue = subtitleRow ? subtitleRow.value : '';
+  return `
+    <div class="border border-blush p-4" data-image-key="${imageRow.key}">
+      <img src="${imageRow.value || 'https://placehold.co/400x300?text=No+image'}" alt="" class="w-full aspect-[4/3] object-cover bg-blush/20 mb-3" data-role="image-preview" />
+      <p class="label text-[10px] text-ink/60 mb-2">${humanizeKey(imageRow.key)}</p>
+      <label class="label text-[10px] text-bordeaux underline-grow cursor-pointer">
+        Change photo
+        <input type="file" accept="image/*" class="hidden" data-role="image-upload" />
+      </label>
+      <p class="text-[11px] text-ink/50 mt-1" data-role="upload-status"></p>
+      <label class="block mt-3">
+        <span class="label text-[10px] text-ink/60 block mb-1">Subtitle</span>
+        <input type="text" value="${escapeHtml(subtitleValue)}" data-subtitle-key="${subtitleKey}" placeholder="Shown below this photo in the slider" class="w-full border border-blush focus:border-bordeaux outline-none px-3 py-2 text-[12px] bg-white" />
+      </label>
+    </div>
+  `;
+}
+
 async function loadContentPanel() {
   const { data, error } = await supabaseClient.from('site_content').select('*').order('key', { ascending: true });
   if (error) {
@@ -395,10 +447,13 @@ async function loadContentPanel() {
   }
   const rows = data || [];
   const debutRows = rows.filter((row) => row.key.startsWith('images.debut_'));
+  const debutSubtitleRows = rows.filter((row) => row.key.startsWith('debut.subtitle_'));
   const imageRows = rows.filter((row) => row.key.startsWith('images.') && !row.key.startsWith('images.debut_'));
-  const textRows = rows.filter((row) => !row.key.startsWith('images.') && row.key !== 'site.locked');
+  const textRows = rows.filter((row) => !row.key.startsWith('images.') && !row.key.startsWith('debut.subtitle_') && row.key !== 'site.locked');
 
-  debutImagesList.innerHTML = debutRows.map(siteImageCardHtml).join('');
+  debutImagesList.innerHTML = debutRows
+    .map((row, i) => debutCardHtml(row, debutSubtitleRows.find((s) => s.key === `debut.subtitle_${i + 1}`), i + 1))
+    .join('');
   siteImagesList.innerHTML = imageRows.map(siteImageCardHtml).join('');
 
   contentForm.innerHTML = textRows
@@ -447,6 +502,17 @@ async function handleSiteImageUpload(e) {
 
 siteImagesList.addEventListener('change', handleSiteImageUpload);
 debutImagesList.addEventListener('change', handleSiteImageUpload);
+
+// Debut subtitles autosave on blur, same pattern as the photo uploads —
+// 'blur' doesn't bubble, so this needs the capture phase.
+debutImagesList.addEventListener('blur', async (e) => {
+  const key = e.target.getAttribute('data-subtitle-key');
+  if (!key) return;
+  const card = e.target.closest('[data-image-key]');
+  const uploadStatus = card.querySelector('[data-role="upload-status"]');
+  const { error } = await supabaseClient.from('site_content').upsert({ key, value: e.target.value });
+  uploadStatus.textContent = error ? `Save failed: ${error.message}` : 'Subtitle saved.';
+}, true);
 
 productsList.addEventListener('click', async (e) => {
   const card = e.target.closest('[data-product-id], [data-is-new]');
@@ -565,7 +631,7 @@ loginForm.addEventListener('submit', async (e) => {
     return;
   }
   showAdmin();
-  await Promise.all([loadProductsPanel(), loadContentPanel(), loadLockStatus(), loadAnalytics(), loadOrdersList()]);
+  await Promise.all([loadProductsPanel(), loadContentPanel(), loadLockStatus(), loadAnalytics(), loadOrdersList(), loadNewsletterSignups()]);
 });
 
 logoutBtn.addEventListener('click', async () => {
@@ -582,7 +648,7 @@ logoutBtn.addEventListener('click', async () => {
   const { data } = await supabaseClient.auth.getSession();
   if (data.session) {
     showAdmin();
-    await Promise.all([loadProductsPanel(), loadContentPanel(), loadLockStatus(), loadAnalytics(), loadOrdersList()]);
+    await Promise.all([loadProductsPanel(), loadContentPanel(), loadLockStatus(), loadAnalytics(), loadOrdersList(), loadNewsletterSignups()]);
   } else {
     showLogin();
   }

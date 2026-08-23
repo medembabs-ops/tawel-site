@@ -38,6 +38,10 @@ function updateQty(index, qty) {
   saveCart(cart);
 }
 
+function clearCart() {
+  saveCart([]);
+}
+
 function cartCount() {
   return getCart().reduce((sum, i) => sum + i.qty, 0);
 }
@@ -117,6 +121,10 @@ function renderIconDock(options = {}) {
   const searchToggle = document.getElementById('icon-dock-search-toggle');
   const searchForm = document.getElementById('icon-dock-search-form');
   if (searchToggle && searchForm) {
+    const closeSearch = () => {
+      searchForm.classList.add('hidden');
+      searchToggle.setAttribute('aria-expanded', 'false');
+    };
     searchToggle.addEventListener('click', () => {
       const isHidden = searchForm.classList.toggle('hidden');
       searchToggle.setAttribute('aria-expanded', String(!isHidden));
@@ -127,8 +135,39 @@ function renderIconDock(options = {}) {
       const q = searchForm.querySelector('#icon-dock-search-input').value.trim();
       location.href = q ? `shop.html?search=${encodeURIComponent(q)}` : 'shop.html';
     });
+    // Clicking anywhere else on the page (another icon, the page body)
+    // closes the search field instead of leaving it stranded open.
+    document.addEventListener('click', (e) => {
+      if (searchForm.classList.contains('hidden')) return;
+      if (searchForm.contains(e.target) || searchToggle.contains(e.target)) return;
+      closeSearch();
+    });
   }
   updateCartBadge();
+  initIconDockOpacity();
+}
+
+// The dock's icons read as gold-on-dark over the hero art, so they start
+// slightly transparent there by design. On any page — or any scroll
+// position — where that dark hero isn't behind them, transparency just
+// makes them harder to see, so this snaps them fully opaque instead.
+function initIconDockOpacity() {
+  const dock = document.getElementById('icon-dock');
+  const hero = document.getElementById('landing-hero');
+  if (!dock) return;
+
+  if (!hero) {
+    dock.classList.add('icon-dock-solid');
+    return;
+  }
+
+  const update = () => {
+    const pastHero = hero.getBoundingClientRect().bottom <= 0;
+    dock.classList.toggle('icon-dock-solid', pastHero);
+  };
+  update();
+  window.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update);
 }
 
 // Fixed header bar behind the icon dock, matching the footer's bordeaux

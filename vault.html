@@ -17,8 +17,8 @@
 
     <div class="mb-12 max-w-xl">
       <p class="label text-[11px] text-bordeaux mb-4">The Vault</p>
-      <h1 class="font-display text-[34px] md:text-[44px] leading-tight">For the beautiful life</h1>
-      <p class="text-[14px] text-ink/60 leading-[1.8] mt-5">An ongoing archive, added to as it happens.</p>
+      <h1 class="font-display text-[34px] md:text-[44px] leading-tight" data-content-key="vault.heading">For the beautiful life</h1>
+      <p class="text-[14px] text-ink/60 leading-[1.8] mt-5" data-content-key="vault.subheading">An ongoing archive, added to as it happens.</p>
     </div>
 
     <div id="vault-grid" class="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-14"></div>
@@ -48,6 +48,7 @@
       document.body.style.visibility = 'visible';
       return;
     }
+    applySiteContent();
 
     const grid = document.getElementById('vault-grid');
     const empty = document.getElementById('vault-empty');

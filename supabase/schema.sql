@@ -223,6 +223,8 @@ insert into site_content (key, value) values
   ('debut.subtitle_2', ''),
   ('debut.subtitle_3', ''),
   ('debut.subtitle_4', ''),
+  ('vault.heading', 'For the beautiful life'),
+  ('vault.subheading', 'An ongoing archive, added to as it happens.'),
   ('lock.eyebrow', 'Somethings are worth discovering before they are announced'),
   ('lock.subheading', 'Preparing for it''s first chapter'),
   ('lock.cta', 'Join the guest list'),

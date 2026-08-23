@@ -171,7 +171,9 @@
       "Bash(env)",
       "Bash(node _verify8.mjs)",
       "Bash(rm -f _verify8.mjs)",
-      "Bash(node screenshot.mjs http://localhost:3000/vault.html vault-page)"
+      "Bash(node screenshot.mjs http://localhost:3000/vault.html vault-page)",
+      "Bash(node _verify9.mjs)",
+      "Bash(node _verify10.mjs)"
     ]
   }
 }

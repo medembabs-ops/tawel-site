@@ -163,9 +163,24 @@ body {
   pointer-events: none;
 }
 
-/* Admin accordion (e.g. Newsletter signups): a plain <details>/<summary>
-   disclosure, styled to match the rest of the panel, with a rotating
-   chevron instead of the browser's default triangle marker. */
+/* Admin panel — layered surfaces in the same colour-tinted shadow
+   language as the storefront's scroll-card (see .scroll-card above),
+   so the admin reads as the same house rather than a generic dashboard
+   bolted on. Doesn't set a background itself — compose with bg-white,
+   bg-ink, etc. as needed per surface. */
+.admin-surface {
+  border: 1px solid var(--blush);
+  box-shadow:
+    0 1px 2px rgba(26, 19, 21, 0.04),
+    0 14px 32px -20px rgba(99, 1, 15, 0.28);
+}
+
+/* Admin accordion: a plain <details>/<summary> disclosure with a rotating
+   chevron instead of the browser's default triangle marker. Opening one
+   marks it with a gold rule down the left edge and tints its title
+   bordeaux — a small "ledger" cue, checked off rather than merely
+   toggled — and hovering/focusing the row itself tints the same bordeaux
+   used everywhere else on the site for an interactive hint. */
 details.admin-accordion > summary {
   list-style: none;
 }
@@ -177,6 +192,23 @@ details.admin-accordion .chevron {
 }
 details.admin-accordion[open] .chevron {
   transform: rotate(180deg);
+}
+details.admin-accordion {
+  border-left: 3px solid transparent;
+  transition: border-left-color 0.3s var(--ink-ease, cubic-bezier(0.65, 0, 0.35, 1));
+}
+details.admin-accordion[open] {
+  border-left-color: var(--gold);
+}
+details.admin-accordion > summary {
+  transition: background-color 0.2s ease;
+}
+details.admin-accordion > summary:hover,
+details.admin-accordion > summary:focus-visible {
+  background-color: var(--bordeaux-tint);
+}
+details.admin-accordion[open] > summary h2 {
+  color: var(--bordeaux);
 }
 
 .underline-grow {

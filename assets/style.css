@@ -144,6 +144,15 @@ body {
   opacity: 0.55;
 }
 
+/* Icon dock: gold icons sit slightly transparent over the dark hero art on
+   first paint. #icon-dock is an id selector, so this always outranks the
+   opacity-* utility classes on the icons below it, however Tailwind orders
+   its generated stylesheet. */
+#icon-dock.icon-dock-solid a,
+#icon-dock.icon-dock-solid button {
+  opacity: 1;
+}
+
 .underline-grow {
   position: relative;
   display: inline-block;

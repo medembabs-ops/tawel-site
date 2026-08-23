@@ -26,7 +26,7 @@
 <main>
 
   <!-- Hero -->
-  <section class="relative h-screen min-h-[640px] flex flex-col items-center justify-center overflow-hidden bg-ink">
+  <section id="landing-hero" class="relative h-screen min-h-[640px] flex flex-col items-center justify-center overflow-hidden bg-ink">
     <div class="absolute inset-0" style="background:
         radial-gradient(120% 90% at 15% 10%, rgba(99,1,15,0.85) 0%, rgba(26,19,21,1) 55%),
         radial-gradient(90% 70% at 85% 95%, rgba(99,1,15,0.55) 0%, rgba(26,19,21,0) 60%);"></div>
@@ -130,16 +130,20 @@
     // DEBUT slider photos are plain image slots (images.debut_1..4),
     // editable from the admin panel's Debut section — falls back to
     // regular product photos if they haven't been set up yet.
-    const debutPhotos = ['images.debut_1', 'images.debut_2', 'images.debut_3', 'images.debut_4']
-      .map((key) => SITE_CONTENT[key])
-      .filter(Boolean);
+    const debutSlots = [1, 2, 3, 4]
+      .map((n) => ({
+        image: SITE_CONTENT[`images.debut_${n}`],
+        subtitle: SITE_CONTENT[`debut.subtitle_${n}`] || '',
+      }))
+      .filter((slot) => slot.image);
 
     const arrivalsTrack = document.getElementById('arrivals-track');
-    if (debutPhotos.length) {
-      [...debutPhotos, ...debutPhotos].forEach((image) => {
+    if (debutSlots.length) {
+      [...debutSlots, ...debutSlots].forEach((slot) => {
         arrivalsTrack.insertAdjacentHTML('beforeend', `
           <a href="shop.html" class="infinite-slider-item group block">
-            <img src="${image}" alt="Tawel Style — debut" loading="lazy" />
+            <img src="${slot.image}" alt="Tawel Style — debut" loading="lazy" />
+            ${slot.subtitle ? `<p class="text-[12px] mt-2 leading-snug text-ink/70 group-hover:text-bordeaux transition-colors">${slot.subtitle}</p>` : ''}
           </a>
         `);
       });

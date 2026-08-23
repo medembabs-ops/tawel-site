@@ -68,6 +68,10 @@
           <p class="text-[17px] text-ink/80 mb-8">${formatPrice(product.price)}</p>
           <p class="text-[15px] leading-[1.8] text-ink/80 max-w-[48ch] mb-10">${product.description}</p>
 
+          ${isSoldOut(product) ? `
+            <p class="label text-[11px] text-ivory bg-ink/80 px-4 py-3 inline-block mb-6">Sold out</p>
+            <p class="text-[13px] text-ink/60 max-w-[40ch]">This piece is out of stock for now — check back soon, or explore the rest of the collection.</p>
+          ` : `
           <form id="add-form">
             <p class="label text-[10px] text-ink/60 mb-3">Size</p>
             <div id="size-options" class="flex flex-wrap gap-2 mb-8"></div>
@@ -84,41 +88,44 @@
             </button>
             <p id="added-msg" class="hidden text-[13px] text-bordeaux mt-4">Added to your cart. <a href="cart.html" class="underline-grow">View cart →</a></p>
           </form>
+          `}
         </div>
       </div>
     `;
 
-    const sizeWrap = document.getElementById('size-options');
-    let selectedSize = product.sizes[0];
-    product.sizes.forEach((size, i) => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.textContent = size;
-      btn.className = `label text-[11px] px-4 py-2 border transition-colors ${i === 0 ? 'border-bordeaux text-bordeaux' : 'border-blush text-ink/70 hover:border-bordeaux'}`;
-      btn.addEventListener('click', () => {
-        selectedSize = size;
-        [...sizeWrap.children].forEach((c) => c.className = 'label text-[11px] px-4 py-2 border border-blush text-ink/70 hover:border-bordeaux transition-colors');
-        btn.className = 'label text-[11px] px-4 py-2 border border-bordeaux text-bordeaux transition-colors';
+    if (!isSoldOut(product)) {
+      const sizeWrap = document.getElementById('size-options');
+      let selectedSize = product.sizes[0];
+      product.sizes.forEach((size, i) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = size;
+        btn.className = `label text-[11px] px-4 py-2 border transition-colors ${i === 0 ? 'border-bordeaux text-bordeaux' : 'border-blush text-ink/70 hover:border-bordeaux'}`;
+        btn.addEventListener('click', () => {
+          selectedSize = size;
+          [...sizeWrap.children].forEach((c) => c.className = 'label text-[11px] px-4 py-2 border border-blush text-ink/70 hover:border-bordeaux transition-colors');
+          btn.className = 'label text-[11px] px-4 py-2 border border-bordeaux text-bordeaux transition-colors';
+        });
+        sizeWrap.appendChild(btn);
       });
-      sizeWrap.appendChild(btn);
-    });
 
-    let qty = 1;
-    const qtyValue = document.getElementById('qty-value');
-    document.getElementById('qty-minus').addEventListener('click', () => {
-      qty = Math.max(1, qty - 1);
-      qtyValue.textContent = qty;
-    });
-    document.getElementById('qty-plus').addEventListener('click', () => {
-      qty += 1;
-      qtyValue.textContent = qty;
-    });
+      let qty = 1;
+      const qtyValue = document.getElementById('qty-value');
+      document.getElementById('qty-minus').addEventListener('click', () => {
+        qty = Math.max(1, qty - 1);
+        qtyValue.textContent = qty;
+      });
+      document.getElementById('qty-plus').addEventListener('click', () => {
+        qty += 1;
+        qtyValue.textContent = qty;
+      });
 
-    document.getElementById('add-form').addEventListener('submit', (e) => {
-      e.preventDefault();
-      addToCart(product.id, selectedSize, qty);
-      document.getElementById('added-msg').classList.remove('hidden');
-    });
+      document.getElementById('add-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        addToCart(product.id, selectedSize, qty);
+        document.getElementById('added-msg').classList.remove('hidden');
+      });
+    }
 
     const related = PRODUCTS.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4);
     if (related.length) {

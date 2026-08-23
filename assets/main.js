@@ -205,11 +205,19 @@ const PLATE_ICONS = {
 
 // Renders a real (licensed) photo when a product has one, falling back to
 // the line-art placeholder plate otherwise.
+// Stock is nullable/untracked (empty admin field = always available, same
+// as every product before stock tracking existed) — only an explicit 0
+// (or less) counts as sold out.
+function isSoldOut(product) {
+  return product.stock !== null && product.stock !== undefined && Number(product.stock) <= 0;
+}
+
 function mediaMarkup(product, classes) {
+  const soldOutBadge = isSoldOut(product) ? '<span class="label text-[10px] text-ivory bg-ink/80 px-2.5 py-1.5 absolute top-3 left-3 z-10">Sold out</span>' : '';
   if (product.image) {
-    return `<div class="${classes} media-photo"><img src="${product.image}" alt="${product.name}" loading="lazy" /><span class="photo-credit">${product.credit}</span></div>`;
+    return `<div class="${classes} media-photo">${soldOutBadge}<img src="${product.image}" alt="${product.name}" loading="lazy" /><span class="photo-credit">${product.credit}</span></div>`;
   }
-  return `<div class="${classes} plate" data-plate="${product.plate}"></div>`;
+  return `<div class="${classes} plate" data-plate="${product.plate}">${soldOutBadge}</div>`;
 }
 
 function initPlates() {

@@ -13,8 +13,15 @@ create table if not exists products (
   sizes text[] not null default '{}',
   image text,
   description text,
+  stock integer,
   created_at timestamptz not null default now()
 );
+
+-- stock is nullable and untracked by default (NULL = always available,
+-- same as every product before this column existed) — only an explicit
+-- 0 (or less) counts as sold out. Harmless no-op if the table was just
+-- created above with the column already.
+alter table products add column if not exists stock integer;
 
 create table if not exists site_content (
   key text primary key,

@@ -357,12 +357,23 @@ function showAdmin() {
   logoutBtn.classList.remove('hidden');
 }
 
+// Stock is nullable/untracked by default (empty field = always available,
+// same as every product before this existed) — only an explicit 0 (or
+// less) counts as sold out. isSoldOut() is the one place that rule lives,
+// reused by both the admin badge here and the storefront pages.
+function isSoldOut(product) {
+  return product.stock !== null && product.stock !== undefined && Number(product.stock) <= 0;
+}
+
 function productCardHtml(product) {
   const isNew = !product.id;
   return `
     <div class="admin-surface bg-white p-5 flex flex-col md:flex-row gap-5" data-product-id="${product.id || ''}" data-is-new="${isNew}">
       <div class="w-full md:w-32 flex-shrink-0">
-        <img src="${product.image || 'https://placehold.co/240x300?text=No+image'}" alt="" class="w-full aspect-[4/5] object-cover bg-blush/20 mb-2" data-role="image-preview" />
+        <div class="relative mb-2">
+          <img src="${product.image || 'https://placehold.co/240x300?text=No+image'}" alt="" class="w-full aspect-[4/5] object-cover bg-blush/20" data-role="image-preview" />
+          ${isSoldOut(product) ? '<span class="label text-[9px] text-ivory bg-ink/80 px-2 py-1 absolute top-2 left-2">Sold out</span>' : ''}
+        </div>
         <label class="label text-[10px] text-bordeaux underline-grow cursor-pointer">
           Change photo
           <input type="file" accept="image/*" class="hidden" data-field="image-upload" />
@@ -381,6 +392,10 @@ function productCardHtml(product) {
         <label class="block text-[12px]">
           <span class="label text-[10px] text-ink/60 block mb-1">Price</span>
           <input type="number" step="0.01" value="${product.price ?? ''}" data-field="price" class="w-full border border-blush focus:border-bordeaux outline-none px-3 py-2 text-[13px] bg-white" />
+        </label>
+        <label class="block text-[12px]">
+          <span class="label text-[10px] text-ink/60 block mb-1">Stock</span>
+          <input type="number" step="1" min="0" value="${product.stock ?? ''}" placeholder="Untracked (always in stock)" data-field="stock" class="w-full border border-blush focus:border-bordeaux outline-none px-3 py-2 text-[13px] bg-white" />
         </label>
         <label class="block text-[12px]">
           <span class="label text-[10px] text-ink/60 block mb-1">Sizes (comma-separated)</span>
@@ -404,10 +419,12 @@ function renderProducts() {
 }
 
 function readCardFields(card) {
+  const stockRaw = card.querySelector('[data-field="stock"]').value.trim();
   return {
     name: card.querySelector('[data-field="name"]').value.trim(),
     category: card.querySelector('[data-field="category"]').value.trim(),
     price: parseFloat(card.querySelector('[data-field="price"]').value) || 0,
+    stock: stockRaw === '' ? null : Math.max(0, parseInt(stockRaw, 10) || 0),
     sizes: card.querySelector('[data-field="sizes"]').value.split(',').map((s) => s.trim()).filter(Boolean),
     description: card.querySelector('[data-field="description"]').value.trim(),
   };

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<style>body{visibility:hidden}</style>
+<title>The Vault — Tawel Style</title>
+<meta name="description" content="The Vault: an ongoing photo archive from the Tawel Style house." />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="assets/tailwind-config.js"></script>
+<link rel="stylesheet" href="assets/style.css" />
+</head>
+<body class="bg-ivory text-ink font-body">
+
+<main class="pt-32 pb-28 px-6 md:px-10">
+  <div class="max-w-7xl mx-auto">
+
+    <div class="mb-12 max-w-xl">
+      <p class="label text-[11px] text-bordeaux mb-4">The Vault</p>
+      <h1 class="font-display text-[34px] md:text-[44px] leading-tight">For the beautiful life</h1>
+      <p class="text-[14px] text-ink/60 leading-[1.8] mt-5">An ongoing archive, added to as it happens.</p>
+    </div>
+
+    <div id="vault-grid" class="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-14"></div>
+
+    <p id="vault-empty" class="hidden text-[14px] text-ink/60 py-16 text-center">
+      The Vault is empty for now — check back soon.
+    </p>
+
+  </div>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/supabase-client.js"></script>
+<script src="assets/products.js"></script>
+<script src="assets/site-content.js"></script>
+<script src="assets/main.js"></script>
+<script>
+  renderFooter();
+  renderIconDock();
+  renderHeaderDivider();
+
+  (async () => {
+    if (await isSiteLocked()) {
+      renderLockScreen();
+      document.body.style.visibility = 'visible';
+      return;
+    }
+
+    const grid = document.getElementById('vault-grid');
+    const empty = document.getElementById('vault-empty');
+
+    if (!supabaseClient) {
+      empty.textContent = 'Supabase isn\'t configured yet.';
+      empty.classList.remove('hidden');
+      document.body.style.visibility = 'visible';
+      return;
+    }
+
+    const { data, error } = await supabaseClient.from('vault_images').select('*').order('created_at', { ascending: true });
+    const photos = error ? [] : (data || []);
+
+    if (photos.length === 0) {
+      empty.classList.remove('hidden');
+    } else {
+      photos.forEach((photo) => {
+        grid.insertAdjacentHTML('beforeend', `
+          <div class="block">
+            <div class="media-photo aspect-[4/5] mb-4"><img src="${photo.image}" alt="${photo.name || 'Tawel Style — The Vault'}" loading="lazy" /></div>
+            ${photo.name ? `<p class="label text-[10px] text-ink/60">${photo.name}</p>` : ''}
+          </div>
+        `);
+      });
+    }
+
+    document.body.style.visibility = 'visible';
+  })();
+</script>
+</body>
+</html>

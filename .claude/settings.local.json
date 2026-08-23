@@ -155,7 +155,12 @@
       "Bash(node \"/private/tmp/claude-501/-Users-mac-Desktop-Tawel-site/3aec96a2-5e18-46d0-8357-9d2ad1f6fc6e/scratchpad/verify.mjs\")",
       "Bash(node ./_verify_tmp.mjs)",
       "Bash(rm -f ./_verify_tmp.mjs)",
-      "Bash(node screenshot.mjs http://localhost:3000/index.html home-full)"
+      "Bash(node screenshot.mjs http://localhost:3000/index.html home-full)",
+      "Bash(~/.local/bin/gh auth *)",
+      "Bash(~/.local/bin/gh pr *)",
+      "Bash(~/.local/bin/gh api *)",
+      "Bash(git fetch *)",
+      "Bash(node _verify2.mjs)"
     ]
   }
 }

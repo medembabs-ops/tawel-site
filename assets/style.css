@@ -153,6 +153,32 @@ body {
   opacity: 1;
 }
 
+/* Header bar behind the icon dock on hero pages: invisible over the hero
+   art itself, faded in by initIconDockOpacity() once it's scrolled past. */
+#header-divider {
+  transition: opacity 0.4s ease;
+}
+.header-divider-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Admin accordion (e.g. Newsletter signups): a plain <details>/<summary>
+   disclosure, styled to match the rest of the panel, with a rotating
+   chevron instead of the browser's default triangle marker. */
+details.admin-accordion > summary {
+  list-style: none;
+}
+details.admin-accordion > summary::-webkit-details-marker {
+  display: none;
+}
+details.admin-accordion .chevron {
+  transition: transform 0.3s var(--ink-ease, cubic-bezier(0.65, 0, 0.35, 1));
+}
+details.admin-accordion[open] .chevron {
+  transform: rotate(180deg);
+}
+
 .underline-grow {
   position: relative;
   display: inline-block;

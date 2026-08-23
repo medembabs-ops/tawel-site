@@ -150,7 +150,10 @@ function renderIconDock(options = {}) {
 // The dock's icons read as gold-on-dark over the hero art, so they start
 // slightly transparent there by design. On any page — or any scroll
 // position — where that dark hero isn't behind them, transparency just
-// makes them harder to see, so this snaps them fully opaque instead.
+// makes them harder to see, so this snaps them fully opaque instead —
+// and, on the homepage, fades in the bordeaux header bar behind them
+// (present but hidden over the hero itself) so they sit on a real
+// background instead of floating directly over the page content.
 function initIconDockOpacity() {
   const dock = document.getElementById('icon-dock');
   const hero = document.getElementById('landing-hero');
@@ -164,6 +167,8 @@ function initIconDockOpacity() {
   const update = () => {
     const pastHero = hero.getBoundingClientRect().bottom <= 0;
     dock.classList.toggle('icon-dock-solid', pastHero);
+    const divider = document.getElementById('header-divider');
+    if (divider) divider.classList.toggle('header-divider-hidden', !pastHero);
   };
   update();
   window.addEventListener('scroll', update, { passive: true });
@@ -172,10 +177,14 @@ function initIconDockOpacity() {
 
 // Fixed header bar behind the icon dock, matching the footer's bordeaux
 // so the page reads as bracketed by the same colour top and bottom.
-function renderHeaderDivider() {
+// Pass { startHidden: true } on pages with their own full-bleed hero
+// (the bar would otherwise sit on top of it at full opacity) — the bar
+// is faded in later, by initIconDockOpacity(), once that hero scrolls
+// out of view.
+function renderHeaderDivider(options = {}) {
   if (document.getElementById('header-divider')) return;
   document.body.insertAdjacentHTML('beforeend', `
-    <div id="header-divider" class="fixed top-0 inset-x-0 z-30 h-20 bg-bordeaux">
+    <div id="header-divider" class="fixed top-0 inset-x-0 z-30 h-20 bg-bordeaux${options.startHidden ? ' header-divider-hidden' : ''}">
       <img src="brand_assets/gold-star.png" alt="" data-content-key="images.gold_star" class="absolute top-1/2 left-14 md:left-16 -translate-y-1/2 h-20 w-auto" />
     </div>
   `);

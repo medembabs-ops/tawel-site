@@ -116,6 +116,7 @@
 <script>
   renderFooter();
   renderIconDock();
+  renderHeaderDivider({ startHidden: true });
 
   (async () => {
     if (await isSiteLocked()) {
@@ -128,22 +129,29 @@
     applySiteContent();
 
     // DEBUT slider photos are plain image slots (images.debut_1..4),
-    // editable from the admin panel's Debut section — falls back to
-    // regular product photos if they haven't been set up yet.
+    // editable from the admin panel's Debut section. Each one is matched
+    // back to a catalog product by photo so it can link straight to that
+    // product and show its real description underneath as a caption —
+    // admin's own debut.subtitle_N text overrides that when set. Falls
+    // back to regular product photos entirely if the slots haven't been
+    // set up yet.
     const debutSlots = [1, 2, 3, 4]
-      .map((n) => ({
-        image: SITE_CONTENT[`images.debut_${n}`],
-        subtitle: SITE_CONTENT[`debut.subtitle_${n}`] || '',
-      }))
-      .filter((slot) => slot.image);
+      .map((n) => {
+        const image = SITE_CONTENT[`images.debut_${n}`];
+        if (!image) return null;
+        const product = PRODUCTS.find((p) => p.image === image);
+        const caption = SITE_CONTENT[`debut.subtitle_${n}`] || (product && product.description) || '';
+        return { image, caption, href: product ? `product.html?id=${product.id}` : 'shop.html' };
+      })
+      .filter(Boolean);
 
     const arrivalsTrack = document.getElementById('arrivals-track');
     if (debutSlots.length) {
       [...debutSlots, ...debutSlots].forEach((slot) => {
         arrivalsTrack.insertAdjacentHTML('beforeend', `
-          <a href="shop.html" class="infinite-slider-item group block">
+          <a href="${slot.href}" class="infinite-slider-item group block">
             <img src="${slot.image}" alt="Tawel Style — debut" loading="lazy" />
-            ${slot.subtitle ? `<p class="text-[12px] mt-2 leading-snug text-ink/70 group-hover:text-bordeaux transition-colors">${slot.subtitle}</p>` : ''}
+            ${slot.caption ? `<p class="text-[12px] mt-2 leading-[1.6] text-ink/70 line-clamp-2 group-hover:text-bordeaux transition-colors">${slot.caption}</p>` : ''}
           </a>
         `);
       });

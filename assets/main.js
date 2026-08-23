@@ -331,7 +331,10 @@ function initInfiniteSliders() {
     el.addEventListener('wheel', markUserActive, { passive: true });
     el.addEventListener('touchstart', markUserActive, { passive: true });
 
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    // Deliberately does NOT skip on prefers-reduced-motion, unlike
+    // initScrollCard() above — this is a slow, gentle horizontal drift
+    // (not a large parallax/zoom effect), and it's already fully
+    // interruptible by the visitor at any time via drag/wheel/touch.
 
     const baseSpeed = parseFloat(el.dataset.speed || '40');
     const hoverSpeed = parseFloat(el.dataset.hoverSpeed || '12');

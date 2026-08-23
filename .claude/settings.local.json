@@ -173,7 +173,10 @@
       "Bash(rm -f _verify8.mjs)",
       "Bash(node screenshot.mjs http://localhost:3000/vault.html vault-page)",
       "Bash(node _verify9.mjs)",
-      "Bash(node _verify10.mjs)"
+      "Bash(node _verify10.mjs)",
+      "Bash(node _verify11.mjs)",
+      "Bash(sed -i '' 's/setTimeout\\(r, 800\\)/setTimeout\\(r, 3000\\)/' _verify11d.mjs)",
+      "Bash(node _verify11d.mjs)"
     ]
   }
 }

@@ -87,7 +87,7 @@
 
   (async () => {
     if (await isSiteLocked()) {
-      renderLockScreen();
+      await renderLockScreen();
       document.body.style.visibility = 'visible';
       return;
     }

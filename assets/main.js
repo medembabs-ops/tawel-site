@@ -71,18 +71,18 @@ function updateCartBadge() {
   });
 }
 
-// Fixed home/search/account/cart icon dock, shown top-right on every page.
-// Pass { centered: true } on pages with the bordeaux header bar so the
-// icons align on the same line as the star asset centered inside it.
-function renderIconDock(options = {}) {
+// Fixed home/search/account/cart icon dock, shown top-right on every page,
+// vertically centered on the header bar's line (top-10, minus half its own
+// height via -translate-y-1/2) — a fixed offset rather than a
+// viewport-relative top-1/2, since this element is itself position:fixed
+// (percentages there resolve against the viewport, not the bar). top-10
+// (2.5rem = 40px) is the midpoint of the 80px (h-20) header bar, so this
+// lines the icons up with the bar's star mark whether or not the bar
+// itself is visible yet (see renderHeaderDivider / initIconDockOpacity).
+function renderIconDock() {
   if (document.getElementById('icon-dock')) return;
-  // top-10 (2.5rem = 40px) is the vertical midpoint of the 80px (h-20)
-  // header bar — a fixed offset, not a viewport-relative top-1/2, since
-  // this element is itself position:fixed (percentages there resolve
-  // against the viewport, not the bar).
-  const vertical = options.centered ? 'top-10 -translate-y-1/2' : 'top-6 md:top-8';
   document.body.insertAdjacentHTML('beforeend', `
-    <div id="icon-dock" class="fixed ${vertical} right-6 md:right-8 z-40 flex flex-row gap-1 text-gold">
+    <div id="icon-dock" class="fixed top-10 -translate-y-1/2 right-6 md:right-8 z-40 flex flex-row gap-1 text-gold">
       <a href="index.html" aria-label="Home" class="flex p-[8.4px] rounded opacity-80 hover:opacity-100 hover:bg-gold/10 focus-visible:opacity-100 focus-visible:bg-gold/10 active:opacity-60 transition-colors">
         <svg class="icon h-[21px] w-[21px]" stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
           <path d="M946.5 505L560.1 118.8l-25.9-25.9a31.5 31.5 0 0 0-44.4 0L77.5 505a63.9 63.9 0 0 0-18.8 46c.4 35.2 29.7 63.3 64.9 63.3h42.5V940h691.8V614.3h43.4c17.1 0 33.2-6.7 45.3-18.8a63.6 63.6 0 0 0 18.7-45.3c0-17-6.7-33.1-18.8-45.2zM568 868H456V664h112v204zm217.9-325.7V868H632V640c0-22.1-17.9-40-40-40H432c-22.1 0-40 17.9-40 40v228H238.1V542.3h-96l370-369.7 23.1 23.1L882 542.3h-96.1z"></path>
@@ -184,7 +184,7 @@ function initIconDockOpacity() {
 function renderHeaderDivider(options = {}) {
   if (document.getElementById('header-divider')) return;
   document.body.insertAdjacentHTML('beforeend', `
-    <div id="header-divider" class="fixed top-0 inset-x-0 z-30 h-20 bg-bordeaux${options.startHidden ? ' header-divider-hidden' : ''}">
+    <div id="header-divider" class="fixed top-0 inset-x-0 z-30 h-20 bg-white border-b border-blush${options.startHidden ? ' header-divider-hidden' : ''}">
       <img src="brand_assets/gold-star.png" alt="" data-content-key="images.gold_star" class="absolute top-1/2 left-14 md:left-16 -translate-y-1/2 h-20 w-auto" />
     </div>
   `);

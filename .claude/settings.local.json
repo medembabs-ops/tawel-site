@@ -160,7 +160,9 @@
       "Bash(~/.local/bin/gh pr *)",
       "Bash(~/.local/bin/gh api *)",
       "Bash(git fetch *)",
-      "Bash(node _verify2.mjs)"
+      "Bash(node _verify2.mjs)",
+      "Bash(node _verify3.mjs)",
+      "Bash(node _verify4.mjs)"
     ]
   }
 }

@@ -293,69 +293,24 @@ function initScrollCard() {
   update();
 }
 
-// Auto-advancing but genuinely user-scrollable slider. The track's content
-// is duplicated in the DOM (rendered twice by the page) so el.scrollLeft can
-// wrap seamlessly at the halfway point — in either direction, whether the
-// scroll came from our own auto-advance or from the visitor dragging/
-// wheeling/touching it themselves. Speed eases toward data-hover-speed on
-// hover; auto-advance pauses for a moment after any user interaction so it
-// never fights their scroll.
+// Auto-advancing marquee. Purely CSS-driven (see .infinite-slider-track's
+// animation in style.css) rather than a JS requestAnimationFrame loop —
+// that JS version turned out to silently stop advancing on real devices
+// with system-level power-saving active, since that throttles JS timers
+// browser-wide (not just in one browser) but doesn't touch compositor-run
+// CSS animations. This function's only job is setting each track's
+// animation-duration from its data-speed attribute (px/second) so the
+// admin-tunable speed still works the same way it used to.
 function initInfiniteSliders() {
   document.querySelectorAll('.infinite-slider').forEach((el) => {
     const track = el.querySelector('.infinite-slider-track');
     if (!track || track.dataset.sliderInit) return;
     track.dataset.sliderInit = 'true';
 
-    let halfWidth = track.scrollWidth / 2;
-    window.addEventListener('resize', () => {
-      halfWidth = track.scrollWidth / 2;
-    });
-
-    el.addEventListener('scroll', () => {
-      if (halfWidth <= 0) return;
-      if (el.scrollLeft >= halfWidth) {
-        el.scrollLeft -= halfWidth;
-      } else if (el.scrollLeft < 0) {
-        el.scrollLeft += halfWidth;
-      }
-    });
-
-    let userActive = false;
-    let userActiveTimer = null;
-    const markUserActive = () => {
-      userActive = true;
-      clearTimeout(userActiveTimer);
-      userActiveTimer = setTimeout(() => { userActive = false; }, 1200);
-    };
-    el.addEventListener('pointerdown', markUserActive);
-    el.addEventListener('wheel', markUserActive, { passive: true });
-    el.addEventListener('touchstart', markUserActive, { passive: true });
-
-    // Deliberately does NOT skip on prefers-reduced-motion, unlike
-    // initScrollCard() above — this is a slow, gentle horizontal drift
-    // (not a large parallax/zoom effect), and it's already fully
-    // interruptible by the visitor at any time via drag/wheel/touch.
-
-    const baseSpeed = parseFloat(el.dataset.speed || '40');
-    const hoverSpeed = parseFloat(el.dataset.hoverSpeed || '12');
-    let target = baseSpeed;
-    let current = baseSpeed;
-    let last = null;
-
-    el.addEventListener('mouseenter', () => { target = hoverSpeed; });
-    el.addEventListener('mouseleave', () => { target = baseSpeed; });
-
-    function frame(now) {
-      if (last === null) last = now;
-      const dt = Math.min(0.05, (now - last) / 1000);
-      last = now;
-      current += (target - current) * Math.min(1, dt * 3);
-      if (!userActive) {
-        el.scrollLeft += current * dt;
-      }
-      requestAnimationFrame(frame);
-    }
-    requestAnimationFrame(frame);
+    const speed = parseFloat(el.dataset.speed || '40'); // px/second
+    const halfWidth = track.scrollWidth / 2;
+    const duration = halfWidth > 0 ? halfWidth / speed : 40;
+    track.style.animationDuration = `${duration}s`;
   });
 }
 

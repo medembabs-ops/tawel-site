@@ -180,7 +180,9 @@
       "Bash(cp /tmp/check_lock_table.mjs ./_check_lock.mjs)",
       "Bash(node _check_lock.mjs)",
       "Bash(node screenshot.mjs http://localhost:3000/admin.html admin-accordions)",
-      "Bash(grep -c '<div class=\"border border-blush p-4\">$' assets/admin.js)"
+      "Bash(grep -c '<div class=\"border border-blush p-4\">$' assets/admin.js)",
+      "Bash(npm audit *)",
+      "Bash(node _verify16.mjs)"
     ]
   }
 }

@@ -28,6 +28,16 @@ create table if not exists guest_list (
   created_at timestamptz not null default now()
 );
 
+-- THE VAULT: an open-ended, admin-managed photo gallery — unlike the fixed
+-- images.debut_1..4 slots, the admin can add or remove as many of these as
+-- they like from the admin panel, each with its own name.
+create table if not exists vault_images (
+  id bigint generated always as identity primary key,
+  name text not null default '',
+  image text not null,
+  created_at timestamptz not null default now()
+);
+
 create table if not exists orders (
   id bigint generated always as identity primary key,
   reference text not null unique,
@@ -55,6 +65,7 @@ alter table products enable row level security;
 alter table site_content enable row level security;
 alter table guest_list enable row level security;
 alter table orders enable row level security;
+alter table vault_images enable row level security;
 
 -- Public (storefront) can read everything.
 drop policy if exists "products readable by anyone" on products;
@@ -117,6 +128,20 @@ create policy "orders readable by authenticated"
 drop policy if exists "orders writable by authenticated" on orders;
 create policy "orders writable by authenticated"
   on orders for update
+  to authenticated
+  using (true)
+  with check (true);
+
+-- Vault gallery: anyone can view it, only the owner can add/rename/remove photos.
+drop policy if exists "vault_images readable by anyone" on vault_images;
+create policy "vault_images readable by anyone"
+  on vault_images for select
+  to anon, authenticated
+  using (true);
+
+drop policy if exists "vault_images writable by authenticated" on vault_images;
+create policy "vault_images writable by authenticated"
+  on vault_images for all
   to authenticated
   using (true)
   with check (true);

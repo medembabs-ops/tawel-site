@@ -62,6 +62,11 @@ const ordersListEl = document.getElementById('orders-list');
 const ordersListStatusEl = document.getElementById('orders-list-status');
 const newsletterListEl = document.getElementById('newsletter-list');
 const newsletterListStatusEl = document.getElementById('newsletter-list-status');
+const vaultImagesList = document.getElementById('vault-images-list');
+const vaultImagesStatus = document.getElementById('vault-images-status');
+const addVaultPhotoBtn = document.getElementById('add-vault-photo-btn');
+
+let vaultImages = [];
 
 let products = [];
 
@@ -600,6 +605,115 @@ addProductBtn.addEventListener('click', () => {
   renderProducts();
 });
 
+// THE VAULT: an open-ended gallery (unlike the fixed Debut slots) — same
+// upload-then-Save-to-apply pattern as Products, reusing the site-images
+// storage bucket since these are editorial photos, not product shots.
+function vaultCardHtml(photo) {
+  const isNew = !photo.id;
+  return `
+    <div class="border border-blush p-4" data-vault-id="${photo.id || ''}" data-is-new="${isNew}">
+      <img src="${photo.image || 'https://placehold.co/400x300?text=Upload+photo'}" alt="" class="w-full aspect-[4/3] object-cover bg-blush/20 mb-3" data-role="image-preview" />
+      <label class="label text-[10px] text-bordeaux underline-grow cursor-pointer">
+        ${photo.image ? 'Change photo' : 'Upload photo'}
+        <input type="file" accept="image/*" class="hidden" data-role="image-upload" />
+      </label>
+      <p class="text-[11px] text-ink/50 mt-1" data-role="upload-status"></p>
+      <label class="block mt-3">
+        <span class="label text-[10px] text-ink/60 block mb-1">Name</span>
+        <input type="text" value="${escapeHtml(photo.name || '')}" data-field="name" placeholder="e.g. Golf Day, 2024" class="w-full border border-blush focus:border-bordeaux outline-none px-3 py-2 text-[12px] bg-white" />
+      </label>
+      <div class="flex gap-2 mt-3">
+        <button type="button" data-action="save" class="label text-[10px] bg-bordeaux text-ivory px-4 py-2 hover:bg-bordeaux-dark transition-colors">Save</button>
+        <button type="button" data-action="delete" class="label text-[10px] border border-blush px-4 py-2 hover:border-bordeaux hover:text-bordeaux transition-colors">Delete</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderVaultImages() {
+  vaultImagesList.innerHTML = vaultImages.map(vaultCardHtml).join('');
+}
+
+async function loadVaultImages() {
+  const { data, error } = await supabaseClient.from('vault_images').select('*').order('created_at', { ascending: true });
+  if (error) {
+    vaultImagesStatus.textContent = `Failed to load The Vault: ${error.message}`;
+    return;
+  }
+  vaultImages = data || [];
+  renderVaultImages();
+}
+
+vaultImagesList.addEventListener('click', async (e) => {
+  const card = e.target.closest('[data-vault-id], [data-is-new]');
+  if (!card) return;
+  const action = e.target.getAttribute('data-action');
+  if (!action) return;
+
+  if (action === 'save') {
+    const name = card.querySelector('[data-field="name"]').value.trim();
+    const isNew = card.getAttribute('data-is-new') === 'true';
+    const existingId = card.getAttribute('data-vault-id');
+    const imagePreview = card.querySelector('[data-role="image-preview"]').getAttribute('src');
+    const image = imagePreview.startsWith('https://placehold.co') ? null : imagePreview;
+
+    if (!image) {
+      vaultImagesStatus.textContent = 'Upload a photo before saving.';
+      return;
+    }
+
+    const { error } = isNew
+      ? await supabaseClient.from('vault_images').insert({ name, image })
+      : await supabaseClient.from('vault_images').update({ name, image }).eq('id', existingId);
+
+    vaultImagesStatus.textContent = error ? `Save failed: ${error.message}` : 'Saved to The Vault.';
+    if (!error) await loadVaultImages();
+  }
+
+  if (action === 'delete') {
+    const existingId = card.getAttribute('data-vault-id');
+    if (!existingId) {
+      card.remove();
+      return;
+    }
+    if (e.target.getAttribute('data-confirm') !== 'true') {
+      e.target.textContent = 'Click again to confirm';
+      e.target.setAttribute('data-confirm', 'true');
+      return;
+    }
+    const { error } = await supabaseClient.from('vault_images').delete().eq('id', existingId);
+    vaultImagesStatus.textContent = error ? `Delete failed: ${error.message}` : 'Photo removed from The Vault.';
+    if (!error) await loadVaultImages();
+  }
+});
+
+vaultImagesList.addEventListener('change', async (e) => {
+  if (e.target.getAttribute('data-role') !== 'image-upload') return;
+  const card = e.target.closest('[data-vault-id], [data-is-new]');
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const uploadStatus = card.querySelector('[data-role="upload-status"]');
+  const preview = card.querySelector('[data-role="image-preview"]');
+  uploadStatus.textContent = 'Uploading…';
+
+  const path = `${Date.now()}-${slugify(file.name)}`;
+  const { error: uploadError } = await supabaseClient.storage.from('site-images').upload(path, file);
+  if (uploadError) {
+    uploadStatus.textContent = `Upload failed: ${uploadError.message}`;
+    return;
+  }
+
+  const { data } = supabaseClient.storage.from('site-images').getPublicUrl(path);
+  preview.setAttribute('src', data.publicUrl);
+  uploadStatus.textContent = 'Uploaded — click Save to apply.';
+});
+
+addVaultPhotoBtn.addEventListener('click', () => {
+  vaultImages.unshift({ id: null, name: '', image: '' });
+  renderVaultImages();
+});
+
 contentForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const rows = [...contentForm.querySelectorAll('[data-key]')].map((el) => ({
@@ -643,7 +757,7 @@ loginForm.addEventListener('submit', async (e) => {
     return;
   }
   showAdmin();
-  await Promise.all([loadProductsPanel(), loadContentPanel(), loadLockStatus(), loadAnalytics(), loadOrdersList(), loadNewsletterSignups()]);
+  await Promise.all([loadProductsPanel(), loadContentPanel(), loadLockStatus(), loadAnalytics(), loadOrdersList(), loadNewsletterSignups(), loadVaultImages()]);
 });
 
 logoutBtn.addEventListener('click', async () => {
@@ -660,7 +774,7 @@ logoutBtn.addEventListener('click', async () => {
   const { data } = await supabaseClient.auth.getSession();
   if (data.session) {
     showAdmin();
-    await Promise.all([loadProductsPanel(), loadContentPanel(), loadLockStatus(), loadAnalytics(), loadOrdersList(), loadNewsletterSignups()]);
+    await Promise.all([loadProductsPanel(), loadContentPanel(), loadLockStatus(), loadAnalytics(), loadOrdersList(), loadNewsletterSignups(), loadVaultImages()]);
   } else {
     showLogin();
   }

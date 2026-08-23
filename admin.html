@@ -77,15 +77,6 @@
         <p id="analytics-status" class="text-[13px] text-ink/60 mt-4"></p>
       </div>
 
-      <div>
-        <div class="mb-6 pb-3 border-b border-blush">
-          <h2 class="label text-[11px] text-bordeaux">Newsletter signups</h2>
-        </div>
-        <p class="text-[13px] text-ink/60 mb-4">Every email collected from the guest-list form, newest first — entries from the last 7 days are marked new this week.</p>
-        <div id="newsletter-list" class="space-y-2 max-h-[28rem] overflow-y-auto"></div>
-        <p id="newsletter-list-status" class="text-[13px] text-ink/60 mt-4"></p>
-      </div>
-
       <div class="flex items-center justify-between border border-blush p-6">
         <div>
           <h2 class="label text-[11px] text-bordeaux mb-1">Site status</h2>
@@ -134,6 +125,20 @@
         <button id="save-content-btn" type="submit" form="content-form" class="label text-[11px] bg-bordeaux text-ivory px-8 py-4 hover:bg-bordeaux-dark transition-colors mt-6">Save site copy</button>
         <p id="content-status" class="text-[13px] text-ink/60 mt-4"></p>
       </div>
+
+      <details class="admin-accordion border border-blush">
+        <summary class="flex items-center justify-between px-6 py-5 cursor-pointer">
+          <h2 class="label text-[11px] text-bordeaux">Newsletter signups</h2>
+          <svg class="chevron h-4 w-4 text-bordeaux flex-shrink-0" stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M6 9l6 6 6-6"></path>
+          </svg>
+        </summary>
+        <div class="px-6 pb-6 border-t border-blush pt-5">
+          <p class="text-[13px] text-ink/60 mb-4">Every email collected from the guest-list form, newest first — entries from the last 7 days are marked new this week.</p>
+          <div id="newsletter-list" class="space-y-2 max-h-[28rem] overflow-y-auto"></div>
+          <p id="newsletter-list-status" class="text-[13px] text-ink/60 mt-4"></p>
+        </div>
+      </details>
 
     </section>
 

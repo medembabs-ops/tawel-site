@@ -446,9 +446,21 @@ async function loadContentPanel() {
     return;
   }
   const rows = data || [];
-  const debutRows = rows.filter((row) => row.key.startsWith('images.debut_'));
+  const rowsByKey = Object.fromEntries(rows.map((row) => [row.key, row]));
+
+  // Known image slots (from IMAGE_LABELS) always get a tile, even if the
+  // site_content row hasn't been created yet — e.g. a key added to the
+  // site after the initial Supabase seed ran never got inserted, and
+  // would otherwise just silently never appear here to be filled in.
+  // Saving a tile (handleSiteImageUpload) upserts, so the row is created
+  // on first use either way.
+  const knownImageKeys = Object.keys(IMAGE_LABELS).filter((key) => key.startsWith('images.'));
+  const allImageKeys = [...new Set([...knownImageKeys, ...rows.map((row) => row.key).filter((key) => key.startsWith('images.'))])];
+  const asRow = (key) => rowsByKey[key] || { key, value: '' };
+
+  const debutRows = allImageKeys.filter((key) => key.startsWith('images.debut_')).sort().map(asRow);
   const debutSubtitleRows = rows.filter((row) => row.key.startsWith('debut.subtitle_'));
-  const imageRows = rows.filter((row) => row.key.startsWith('images.') && !row.key.startsWith('images.debut_'));
+  const imageRows = allImageKeys.filter((key) => !key.startsWith('images.debut_')).sort().map(asRow);
   const textRows = rows.filter((row) => !row.key.startsWith('images.') && !row.key.startsWith('debut.subtitle_') && row.key !== 'site.locked');
 
   debutImagesList.innerHTML = debutRows

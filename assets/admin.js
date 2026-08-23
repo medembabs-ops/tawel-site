@@ -22,7 +22,7 @@ const IMAGE_LABELS = {
   'images.about_photo': 'About page — photo',
   'images.lock_logo': 'Locked page — logo',
   'images.lock_tagline': 'Locked page — tagline',
-  'images.lock_photo': 'Locked page — photo',
+  'images.lock_photo': 'Locked page — photo (fallback, used only if no photos are added below)',
   'images.debut_1': 'Debut slider — photo 1',
   'images.debut_2': 'Debut slider — photo 2',
   'images.debut_3': 'Debut slider — photo 3',
@@ -76,8 +76,14 @@ const newsletterListStatusEl = document.getElementById('newsletter-list-status')
 const vaultImagesList = document.getElementById('vault-images-list');
 const vaultImagesStatus = document.getElementById('vault-images-status');
 const addVaultPhotoBtn = document.getElementById('add-vault-photo-btn');
+const lockPhotosList = document.getElementById('lock-photos-list');
+const lockPhotosStatus = document.getElementById('lock-photos-status');
+const addLockPhotoBtn = document.getElementById('add-lock-photo-btn');
+const lockPhotosAlternateText = document.getElementById('lock-photos-alternate-text');
+const lockPhotosAlternateBtn = document.getElementById('lock-photos-alternate-btn');
 
 let vaultImages = [];
+let lockPhotos = [];
 
 let products = [];
 
@@ -478,7 +484,7 @@ async function loadContentPanel() {
   const debutSubtitleRows = rows.filter((row) => row.key.startsWith('debut.subtitle_'));
   const imageRows = allImageKeys.filter((key) => !key.startsWith('images.debut_')).sort().map(asRow);
 
-  const dbTextRows = rows.filter((row) => !row.key.startsWith('images.') && !row.key.startsWith('debut.subtitle_') && row.key !== 'site.locked');
+  const dbTextRows = rows.filter((row) => !row.key.startsWith('images.') && !row.key.startsWith('debut.subtitle_') && row.key !== 'site.locked' && row.key !== 'lock.photos_alternate');
   const dbTextKeys = new Set(dbTextRows.map((row) => row.key));
   const missingTextRows = Object.keys(KNOWN_TEXT_DEFAULTS)
     .filter((key) => !dbTextKeys.has(key))
@@ -731,6 +737,113 @@ addVaultPhotoBtn.addEventListener('click', () => {
   renderVaultImages();
 });
 
+// Locked-page photo set — a single field (just the image), so unlike
+// Vault/Products there's no separate Save step: uploading immediately
+// inserts (new card) or updates (existing card) the row, same pattern as
+// the single-slot site image tiles above.
+function lockPhotoCardHtml(photo) {
+  return `
+    <div class="border border-blush p-4" data-lock-photo-id="${photo.id || ''}">
+      <img src="${photo.image || 'https://placehold.co/400x300?text=Upload+photo'}" alt="" class="w-full aspect-[4/3] object-cover bg-blush/20 mb-3" data-role="image-preview" />
+      <label class="label text-[10px] text-bordeaux underline-grow cursor-pointer">
+        ${photo.image ? 'Change photo' : 'Upload photo'}
+        <input type="file" accept="image/*" class="hidden" data-role="image-upload" />
+      </label>
+      <p class="text-[11px] text-ink/50 mt-1" data-role="upload-status"></p>
+      <button type="button" data-action="delete" class="label text-[10px] text-ink/50 hover:text-bordeaux transition-colors mt-3">Delete</button>
+    </div>
+  `;
+}
+
+function renderLockPhotos() {
+  lockPhotosList.innerHTML = lockPhotos.map(lockPhotoCardHtml).join('');
+}
+
+async function loadLockPhotosPanel() {
+  const { data, error } = await supabaseClient.from('lock_photos').select('*').order('created_at', { ascending: true });
+  if (error) {
+    lockPhotosStatus.textContent = `Failed to load locked-page photos: ${error.message}`;
+    return;
+  }
+  lockPhotos = data || [];
+  renderLockPhotos();
+}
+
+lockPhotosList.addEventListener('change', async (e) => {
+  if (e.target.getAttribute('data-role') !== 'image-upload') return;
+  const card = e.target.closest('[data-lock-photo-id]');
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const uploadStatus = card.querySelector('[data-role="upload-status"]');
+  const preview = card.querySelector('[data-role="image-preview"]');
+  uploadStatus.textContent = 'Uploading…';
+
+  const path = `${Date.now()}-${slugify(file.name)}`;
+  const { error: uploadError } = await supabaseClient.storage.from('site-images').upload(path, file);
+  if (uploadError) {
+    uploadStatus.textContent = `Upload failed: ${uploadError.message}`;
+    return;
+  }
+
+  const { data: publicData } = supabaseClient.storage.from('site-images').getPublicUrl(path);
+  const existingId = card.getAttribute('data-lock-photo-id');
+  const { data: savedRow, error: saveError } = existingId
+    ? await supabaseClient.from('lock_photos').update({ image: publicData.publicUrl }).eq('id', existingId).select().single()
+    : await supabaseClient.from('lock_photos').insert({ image: publicData.publicUrl }).select().single();
+
+  if (saveError) {
+    uploadStatus.textContent = `Save failed: ${saveError.message}`;
+    return;
+  }
+  preview.setAttribute('src', publicData.publicUrl);
+  card.setAttribute('data-lock-photo-id', savedRow.id);
+  uploadStatus.textContent = 'Updated — live on the site now.';
+});
+
+lockPhotosList.addEventListener('click', async (e) => {
+  if (e.target.getAttribute('data-action') !== 'delete') return;
+  const card = e.target.closest('[data-lock-photo-id]');
+  const existingId = card.getAttribute('data-lock-photo-id');
+  if (!existingId) {
+    card.remove();
+    return;
+  }
+  if (e.target.getAttribute('data-confirm') !== 'true') {
+    e.target.textContent = 'Click again to confirm';
+    e.target.setAttribute('data-confirm', 'true');
+    return;
+  }
+  const { error } = await supabaseClient.from('lock_photos').delete().eq('id', existingId);
+  lockPhotosStatus.textContent = error ? `Delete failed: ${error.message}` : 'Photo removed.';
+  if (!error) await loadLockPhotosPanel();
+});
+
+addLockPhotoBtn.addEventListener('click', () => {
+  lockPhotos.unshift({ id: null, image: '' });
+  renderLockPhotos();
+});
+
+async function loadLockPhotosAlternateToggle() {
+  const { data, error } = await supabaseClient.from('site_content').select('value').eq('key', 'lock.photos_alternate').maybeSingle();
+  const alternate = !error && data?.value === 'true';
+  lockPhotosAlternateText.textContent = alternate
+    ? 'On — rotates through every photo below, 30 minutes apart.'
+    : 'Off — always shows the first photo below.';
+  lockPhotosAlternateBtn.textContent = alternate ? 'Turn off' : 'Turn on';
+  lockPhotosAlternateBtn.dataset.alternate = String(alternate);
+}
+
+lockPhotosAlternateBtn.addEventListener('click', async () => {
+  const next = lockPhotosAlternateBtn.dataset.alternate !== 'true';
+  const { error } = await supabaseClient.from('site_content').upsert({ key: 'lock.photos_alternate', value: String(next) });
+  if (error) {
+    lockPhotosAlternateText.textContent = `Failed to update: ${error.message}`;
+    return;
+  }
+  await loadLockPhotosAlternateToggle();
+});
+
 contentForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const rows = [...contentForm.querySelectorAll('[data-key]')].map((el) => ({
@@ -774,7 +887,7 @@ loginForm.addEventListener('submit', async (e) => {
     return;
   }
   showAdmin();
-  await Promise.all([loadProductsPanel(), loadContentPanel(), loadLockStatus(), loadAnalytics(), loadOrdersList(), loadNewsletterSignups(), loadVaultImages()]);
+  await Promise.all([loadProductsPanel(), loadContentPanel(), loadLockStatus(), loadAnalytics(), loadOrdersList(), loadNewsletterSignups(), loadVaultImages(), loadLockPhotosPanel(), loadLockPhotosAlternateToggle()]);
 });
 
 logoutBtn.addEventListener('click', async () => {
@@ -791,7 +904,7 @@ logoutBtn.addEventListener('click', async () => {
   const { data } = await supabaseClient.auth.getSession();
   if (data.session) {
     showAdmin();
-    await Promise.all([loadProductsPanel(), loadContentPanel(), loadLockStatus(), loadAnalytics(), loadOrdersList(), loadNewsletterSignups(), loadVaultImages()]);
+    await Promise.all([loadProductsPanel(), loadContentPanel(), loadLockStatus(), loadAnalytics(), loadOrdersList(), loadNewsletterSignups(), loadVaultImages(), loadLockPhotosPanel(), loadLockPhotosAlternateToggle()]);
   } else {
     showLogin();
   }

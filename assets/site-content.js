@@ -201,7 +201,29 @@ function createGuestListCta(label) {
   return wrap;
 }
 
-function renderLockScreen() {
+// How often the locked-page photo rotates when lock.photos_alternate is
+// 'true' — a fresh page load always shows the photo for "now" (the index
+// is derived straight from the clock, not stored anywhere), and a page
+// left open gets nudged onto the next one shortly after each boundary.
+const LOCK_PHOTO_ROTATE_MS = 30 * 60 * 1000;
+
+function lockPhotoIndexNow(count) {
+  return Math.floor(Date.now() / LOCK_PHOTO_ROTATE_MS) % count;
+}
+
+async function loadLockPhotoGallery() {
+  if (!supabaseClient) return [];
+  const { data, error } = await supabaseClient.from('lock_photos').select('image').order('created_at', { ascending: true });
+  if (error) return [];
+  return (data || []).map((row) => row.image).filter(Boolean);
+}
+
+async function renderLockScreen() {
+  const alternate = SITE_CONTENT['lock.photos_alternate'] === 'true';
+  const uploaded = await loadLockPhotoGallery();
+  const fallback = SITE_CONTENT['images.lock_photo'] || 'assets/img/lock/model.png';
+  const gallery = uploaded.length ? uploaded : [fallback];
+
   document.body.innerHTML = '';
 
   const main = document.createElement('main');
@@ -257,13 +279,29 @@ function renderLockScreen() {
   const photoPanel = document.createElement('div');
   photoPanel.className = 'relative h-[45vh] md:h-auto overflow-hidden md:translate-x-[-64px]';
 
+  let activeIndex = alternate ? lockPhotoIndexNow(gallery.length) : 0;
   const photo = document.createElement('img');
-  photo.src = SITE_CONTENT['images.lock_photo'] || 'assets/img/lock/model.png';
+  photo.src = gallery[activeIndex];
   photo.alt = '';
-  photo.className = 'w-full h-full object-cover object-top';
+  photo.className = 'w-full h-full object-cover object-top transition-opacity duration-700';
 
   photoPanel.appendChild(photo);
   gridWrap.append(brandPanel, photoPanel);
   main.append(eyebrow, gridWrap);
   document.body.appendChild(main);
+
+  // Only worth polling for a boundary crossing if there's actually more
+  // than one photo to rotate through and alternating is turned on.
+  if (alternate && gallery.length > 1) {
+    setInterval(() => {
+      const nextIndex = lockPhotoIndexNow(gallery.length);
+      if (nextIndex === activeIndex) return;
+      activeIndex = nextIndex;
+      photo.style.opacity = '0';
+      setTimeout(() => {
+        photo.src = gallery[activeIndex];
+        photo.style.opacity = '1';
+      }, 700);
+    }, 60 * 1000);
+  }
 }

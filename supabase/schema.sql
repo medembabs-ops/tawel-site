@@ -38,6 +38,16 @@ create table if not exists vault_images (
   created_at timestamptz not null default now()
 );
 
+-- Locked landing page photo(s). When site_content['lock.photos_alternate']
+-- is 'true' and there are 2+ rows here, the locked page rotates through
+-- all of them, 30 minutes apart. With alternating off (or 0 rows), the
+-- page falls back to images.lock_photo, then to a hardcoded default.
+create table if not exists lock_photos (
+  id bigint generated always as identity primary key,
+  image text not null,
+  created_at timestamptz not null default now()
+);
+
 create table if not exists orders (
   id bigint generated always as identity primary key,
   reference text not null unique,
@@ -66,6 +76,7 @@ alter table site_content enable row level security;
 alter table guest_list enable row level security;
 alter table orders enable row level security;
 alter table vault_images enable row level security;
+alter table lock_photos enable row level security;
 
 -- Public (storefront) can read everything.
 drop policy if exists "products readable by anyone" on products;
@@ -142,6 +153,21 @@ create policy "vault_images readable by anyone"
 drop policy if exists "vault_images writable by authenticated" on vault_images;
 create policy "vault_images writable by authenticated"
   on vault_images for all
+  to authenticated
+  using (true)
+  with check (true);
+
+-- Locked page photos: anyone can view them (they're shown to logged-out
+-- visitors on the locked landing page itself), only the owner can manage them.
+drop policy if exists "lock_photos readable by anyone" on lock_photos;
+create policy "lock_photos readable by anyone"
+  on lock_photos for select
+  to anon, authenticated
+  using (true);
+
+drop policy if exists "lock_photos writable by authenticated" on lock_photos;
+create policy "lock_photos writable by authenticated"
+  on lock_photos for all
   to authenticated
   using (true)
   with check (true);
@@ -228,5 +254,6 @@ insert into site_content (key, value) values
   ('lock.eyebrow', 'Somethings are worth discovering before they are announced'),
   ('lock.subheading', 'Preparing for it''s first chapter'),
   ('lock.cta', 'Join the guest list'),
+  ('lock.photos_alternate', 'false'),
   ('site.locked', 'false')
 on conflict (key) do nothing;

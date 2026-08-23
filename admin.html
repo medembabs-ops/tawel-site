@@ -86,6 +86,25 @@
       </div>
 
       <div>
+        <div class="flex items-center justify-between border border-blush p-6 mb-6">
+          <div>
+            <h2 class="label text-[11px] text-bordeaux mb-1">Locked page — photo alternating</h2>
+            <p id="lock-photos-alternate-text" class="text-[13px] text-ink/70">Loading…</p>
+          </div>
+          <button id="lock-photos-alternate-btn" type="button" class="label text-[11px] border border-blush px-6 py-3 hover:border-bordeaux hover:text-bordeaux transition-colors flex-shrink-0">…</button>
+        </div>
+        <div class="flex items-end justify-between mb-6 pb-3 border-b border-blush">
+          <div>
+            <h2 class="label text-[11px] text-bordeaux">Locked page — photos</h2>
+            <p class="text-[13px] text-ink/60 mt-2">Shown on the locked landing page. With alternating on above, rotates through all of these, 30 minutes apart.</p>
+          </div>
+          <button id="add-lock-photo-btn" class="label text-[11px] underline-grow hover:text-bordeaux transition-colors flex-shrink-0 ml-4">+ Add photo</button>
+        </div>
+        <div id="lock-photos-list" class="grid sm:grid-cols-2 md:grid-cols-4 gap-5"></div>
+        <p id="lock-photos-status" class="text-[13px] text-ink/60 mt-4"></p>
+      </div>
+
+      <div>
         <div class="mb-6 pb-3 border-b border-blush">
           <h2 class="label text-[11px] text-bordeaux">Orders</h2>
         </div>

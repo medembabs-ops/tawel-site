@@ -160,7 +160,7 @@ function trendBadge(current, previous, higherIsBetter = true) {
 
 function statTileHtml(label, value, badge) {
   return `
-    <div class="border border-blush p-4">
+    <div class="admin-surface bg-white p-4">
       <p class="label text-[10px] text-ink/60 mb-2">${escapeHtml(label)}</p>
       <div class="flex items-baseline justify-between gap-2">
         <p class="font-display text-[24px] leading-none">${value}</p>
@@ -289,7 +289,7 @@ function orderRowHtml(order) {
     : `<span class="label text-[10px] px-3 py-2 flex-shrink-0 ${ORDER_STATUS_BADGE[order.payment_status] || 'text-ink/60 bg-blush/20'}">${order.payment_status.toUpperCase()}</span>`;
 
   return `
-    <div class="border border-blush p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6" data-order-id="${order.id}">
+    <div class="admin-surface bg-white p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6" data-order-id="${order.id}">
       <div class="flex-1 min-w-0">
         <p class="text-[13px] truncate">${escapeHtml(order.customer_name)} — <span class="text-ink/60">${escapeHtml(order.customer_email)}</span></p>
         <p class="text-[11px] text-ink/50 mt-1">${escapeHtml(order.reference)} · ${date}</p>
@@ -328,7 +328,7 @@ ordersListEl.addEventListener('click', async (e) => {
 function newsletterRowHtml(entry, isNew) {
   const date = new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   return `
-    <div class="border border-blush p-4 flex items-center justify-between gap-4">
+    <div class="admin-surface bg-white p-4 flex items-center justify-between gap-4">
       <p class="text-[13px] truncate">${escapeHtml(entry.email)}</p>
       <div class="flex items-center gap-3 flex-shrink-0">
         ${isNew ? '<span class="label text-[9px] px-1.5 py-0.5 text-gold bg-gold/10">NEW THIS WEEK</span>' : ''}
@@ -360,7 +360,7 @@ function showAdmin() {
 function productCardHtml(product) {
   const isNew = !product.id;
   return `
-    <div class="border border-blush p-5 flex flex-col md:flex-row gap-5" data-product-id="${product.id || ''}" data-is-new="${isNew}">
+    <div class="admin-surface bg-white p-5 flex flex-col md:flex-row gap-5" data-product-id="${product.id || ''}" data-is-new="${isNew}">
       <div class="w-full md:w-32 flex-shrink-0">
         <img src="${product.image || 'https://placehold.co/240x300?text=No+image'}" alt="" class="w-full aspect-[4/5] object-cover bg-blush/20 mb-2" data-role="image-preview" />
         <label class="label text-[10px] text-bordeaux underline-grow cursor-pointer">
@@ -425,7 +425,7 @@ async function loadProductsPanel() {
 
 function siteImageCardHtml(row) {
   return `
-    <div class="border border-blush p-4" data-image-key="${row.key}">
+    <div class="admin-surface bg-white p-4" data-image-key="${row.key}">
       <img src="${row.value || 'https://placehold.co/400x300?text=No+image'}" alt="" class="w-full aspect-[4/3] object-cover bg-blush/20 mb-3" data-role="image-preview" />
       <p class="label text-[10px] text-ink/60 mb-2">${humanizeKey(row.key)}</p>
       <label class="label text-[10px] text-bordeaux underline-grow cursor-pointer">
@@ -445,7 +445,7 @@ function debutCardHtml(imageRow, subtitleRow, index) {
   const subtitleKey = subtitleRow ? subtitleRow.key : `debut.subtitle_${index}`;
   const subtitleValue = subtitleRow ? subtitleRow.value : '';
   return `
-    <div class="border border-blush p-4" data-image-key="${imageRow.key}">
+    <div class="admin-surface bg-white p-4" data-image-key="${imageRow.key}">
       <img src="${imageRow.value || 'https://placehold.co/400x300?text=No+image'}" alt="" class="w-full aspect-[4/3] object-cover bg-blush/20 mb-3" data-role="image-preview" />
       <p class="label text-[10px] text-ink/60 mb-2">${humanizeKey(imageRow.key)}</p>
       <label class="label text-[10px] text-bordeaux underline-grow cursor-pointer">
@@ -634,7 +634,7 @@ addProductBtn.addEventListener('click', () => {
 function vaultCardHtml(photo) {
   const isNew = !photo.id;
   return `
-    <div class="border border-blush p-4" data-vault-id="${photo.id || ''}" data-is-new="${isNew}">
+    <div class="admin-surface bg-white p-4" data-vault-id="${photo.id || ''}" data-is-new="${isNew}">
       <img src="${photo.image || 'https://placehold.co/400x300?text=Upload+photo'}" alt="" class="w-full aspect-[4/3] object-cover bg-blush/20 mb-3" data-role="image-preview" />
       <label class="label text-[10px] text-bordeaux underline-grow cursor-pointer">
         ${photo.image ? 'Change photo' : 'Upload photo'}
@@ -743,7 +743,7 @@ addVaultPhotoBtn.addEventListener('click', () => {
 // the single-slot site image tiles above.
 function lockPhotoCardHtml(photo) {
   return `
-    <div class="border border-blush p-4" data-lock-photo-id="${photo.id || ''}">
+    <div class="admin-surface bg-white p-4" data-lock-photo-id="${photo.id || ''}">
       <img src="${photo.image || 'https://placehold.co/400x300?text=Upload+photo'}" alt="" class="w-full aspect-[4/3] object-cover bg-blush/20 mb-3" data-role="image-preview" />
       <label class="label text-[10px] text-bordeaux underline-grow cursor-pointer">
         ${photo.image ? 'Change photo' : 'Upload photo'}

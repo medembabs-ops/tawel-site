@@ -5,14 +5,46 @@
 const API_VERSION = '2024-10';
 
 function isShopifyConfigured(env) {
-  return Boolean(env.SHOPIFY_STORE_DOMAIN && env.SHOPIFY_ADMIN_TOKEN);
+  return Boolean(env.SHOPIFY_STORE_DOMAIN && env.SHOPIFY_CLIENT_ID && env.SHOPIFY_CLIENT_SECRET);
+}
+
+// The client_credentials grant issues a token that expires in ~24h (not a
+// permanent token like the classic custom-app flow), so it's fetched fresh
+// and cached per warm isolate rather than stored as a static secret.
+let cachedToken = null;
+let cachedTokenExpiresAt = 0;
+
+async function getAccessToken(env) {
+  if (cachedToken && Date.now() < cachedTokenExpiresAt) {
+    return cachedToken;
+  }
+
+  const res = await fetch(`https://${env.SHOPIFY_STORE_DOMAIN}/admin/oauth/access_token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      client_id: env.SHOPIFY_CLIENT_ID,
+      client_secret: env.SHOPIFY_CLIENT_SECRET,
+      grant_type: 'client_credentials',
+    }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.access_token) {
+    throw new Error(data.errors || `Shopify token request failed (${res.status})`);
+  }
+
+  cachedToken = data.access_token;
+  // Refresh a minute early so a near-expiry token is never used mid-request.
+  cachedTokenExpiresAt = Date.now() + (data.expires_in - 60) * 1000;
+  return cachedToken;
 }
 
 async function shopifyFetch(env, path, options = {}) {
+  const token = await getAccessToken(env);
   const res = await fetch(`https://${env.SHOPIFY_STORE_DOMAIN}/admin/api/${API_VERSION}${path}`, {
     ...options,
     headers: {
-      'X-Shopify-Access-Token': env.SHOPIFY_ADMIN_TOKEN,
+      'X-Shopify-Access-Token': token,
       'Content-Type': 'application/json',
       ...options.headers,
     },

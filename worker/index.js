@@ -1,6 +1,8 @@
 // Tawel Style — Worker entry point.
-// Handles the two Paystack routes server-side (secret keys can never live in
-// browser JS) and falls back to the static site for everything else.
+// Handles the Paystack and Shopify routes server-side (secret keys can never
+// live in browser JS) and falls back to the static site for everything else.
+
+import { isShopifyConfigured, upsertProduct, deleteProduct, createDraftOrder, completeDraftOrder } from './shopify.js';
 
 const SUPABASE_URL = 'https://gnbmbvsumegybmuqvbkn.supabase.co';
 
@@ -9,6 +11,42 @@ function jsonResponse(obj, status = 200) {
     status,
     headers: { 'Content-Type': 'application/json' },
   });
+}
+
+function supabaseHeaders(env, extra = {}) {
+  return {
+    apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+    Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+    ...extra,
+  };
+}
+
+async function supabaseSelectOne(env, table, column, value) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${column}=eq.${encodeURIComponent(value)}&select=*`, {
+    headers: supabaseHeaders(env),
+  });
+  const rows = await res.json();
+  return rows[0] || null;
+}
+
+async function supabasePatch(env, table, column, value, fields) {
+  await fetch(`${SUPABASE_URL}/rest/v1/${table}?${column}=eq.${encodeURIComponent(value)}`, {
+    method: 'PATCH',
+    headers: supabaseHeaders(env, { 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
+    body: JSON.stringify(fields),
+  });
+}
+
+// Confirms the request carries a live Supabase session for the one owner
+// account — reuses the service role key as the apikey header, which GoTrue
+// accepts in place of the anon key for verifying a user's access token.
+async function verifySupabaseUser(request, env) {
+  const auth = request.headers.get('authorization');
+  if (!auth || !env.SUPABASE_SERVICE_ROLE_KEY) return null;
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: auth },
+  });
+  return res.ok ? res.json() : null;
 }
 
 async function handleInitialize(request, env) {
@@ -94,19 +132,168 @@ async function handleWebhook(request, env) {
     const reference = event.data.reference;
     const status = event.data.status === 'success' ? 'paid' : 'failed';
 
-    await fetch(`${SUPABASE_URL}/rest/v1/orders?reference=eq.${encodeURIComponent(reference)}`, {
-      method: 'PATCH',
-      headers: {
-        apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-        Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-        'Content-Type': 'application/json',
-        Prefer: 'return=minimal',
-      },
-      body: JSON.stringify({ payment_status: status }),
-    });
+    await supabasePatch(env, 'orders', 'reference', reference, { payment_status: status });
+
+    // Convert the matching Shopify draft order into a real, paid order.
+    // Failures here never fail the webhook — Paystack retries on non-2xx,
+    // and payment confirmation must not depend on Shopify being reachable.
+    if (status === 'paid' && isShopifyConfigured(env)) {
+      const order = await supabaseSelectOne(env, 'orders', 'reference', reference);
+      if (order?.shopify_draft_order_id) {
+        try {
+          await completeDraftOrder(env, order.shopify_draft_order_id);
+        } catch (err) {
+          console.error('Shopify draft order completion failed:', err.message);
+        }
+      }
+    }
   }
 
   return new Response('ok', { status: 200 });
+}
+
+async function handleShopifyCreateOrder(request, env) {
+  if (request.method !== 'POST') {
+    return new Response('Method not allowed', { status: 405 });
+  }
+
+  if (!isShopifyConfigured(env) || !env.SUPABASE_SERVICE_ROLE_KEY) {
+    return jsonResponse({ error: 'Shopify is not connected yet.' }, 503);
+  }
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return jsonResponse({ error: 'Invalid request body.' }, 400);
+  }
+
+  const { reference } = body;
+  if (!reference) {
+    return jsonResponse({ error: 'Missing reference.' }, 400);
+  }
+
+  const order = await supabaseSelectOne(env, 'orders', 'reference', reference);
+  if (!order) {
+    return jsonResponse({ error: 'Order not found.' }, 404);
+  }
+  if (order.shopify_draft_order_id) {
+    return jsonResponse({ ok: true, draft_order_id: order.shopify_draft_order_id });
+  }
+
+  const productIds = [...new Set((order.items || []).map((item) => item.id))];
+  let products = [];
+  if (productIds.length) {
+    const filter = productIds.map(encodeURIComponent).join(',');
+    const productsRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/products?id=in.(${filter})&select=id,shopify_variant_ids`,
+      { headers: supabaseHeaders(env) }
+    );
+    products = await productsRes.json();
+  }
+  const variantLookup = {};
+  products.forEach((p) => {
+    variantLookup[p.id] = p.shopify_variant_ids || {};
+  });
+
+  const lineItems = (order.items || []).map((item) => {
+    const variant = variantLookup[item.id]?.[item.size];
+    return variant
+      ? { variant_id: variant.variant_id, quantity: item.qty }
+      : { title: `${item.name}${item.size ? ` — ${item.size}` : ''}`, price: String(item.price), quantity: item.qty };
+  });
+
+  let draftOrderId;
+  try {
+    draftOrderId = await createDraftOrder(env, order, lineItems);
+  } catch (err) {
+    return jsonResponse({ error: `Shopify draft order failed: ${err.message}` }, 502);
+  }
+
+  await supabasePatch(env, 'orders', 'reference', reference, { shopify_draft_order_id: String(draftOrderId) });
+
+  return jsonResponse({ ok: true, draft_order_id: draftOrderId });
+}
+
+async function handleShopifySyncProduct(request, env) {
+  if (request.method !== 'POST') {
+    return new Response('Method not allowed', { status: 405 });
+  }
+
+  if (!isShopifyConfigured(env) || !env.SUPABASE_SERVICE_ROLE_KEY) {
+    return jsonResponse({ error: 'Shopify is not connected yet.' }, 503);
+  }
+
+  const user = await verifySupabaseUser(request, env);
+  if (!user) {
+    return jsonResponse({ error: 'Unauthorized.' }, 401);
+  }
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return jsonResponse({ error: 'Invalid request body.' }, 400);
+  }
+
+  const { productId } = body;
+  if (!productId) {
+    return jsonResponse({ error: 'Missing productId.' }, 400);
+  }
+
+  const product = await supabaseSelectOne(env, 'products', 'id', productId);
+  if (!product) {
+    return jsonResponse({ error: 'Product not found.' }, 404);
+  }
+
+  let result;
+  try {
+    result = await upsertProduct(env, product);
+  } catch (err) {
+    return jsonResponse({ error: `Shopify sync failed: ${err.message}` }, 502);
+  }
+
+  await supabasePatch(env, 'products', 'id', productId, {
+    shopify_product_id: String(result.shopify_product_id),
+    shopify_variant_ids: result.shopify_variant_ids,
+  });
+
+  return jsonResponse({ ok: true });
+}
+
+async function handleShopifyDeleteProduct(request, env) {
+  if (request.method !== 'POST') {
+    return new Response('Method not allowed', { status: 405 });
+  }
+
+  if (!isShopifyConfigured(env)) {
+    return jsonResponse({ error: 'Shopify is not connected yet.' }, 503);
+  }
+
+  const user = await verifySupabaseUser(request, env);
+  if (!user) {
+    return jsonResponse({ error: 'Unauthorized.' }, 401);
+  }
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return jsonResponse({ error: 'Invalid request body.' }, 400);
+  }
+
+  const { shopifyProductId } = body;
+  if (!shopifyProductId) {
+    return jsonResponse({ ok: true });
+  }
+
+  try {
+    await deleteProduct(env, shopifyProductId);
+  } catch (err) {
+    return jsonResponse({ error: `Shopify delete failed: ${err.message}` }, 502);
+  }
+
+  return jsonResponse({ ok: true });
 }
 
 export default {
@@ -119,6 +306,18 @@ export default {
 
     if (url.pathname === '/api/paystack/webhook') {
       return handleWebhook(request, env);
+    }
+
+    if (url.pathname === '/api/shopify/create-order') {
+      return handleShopifyCreateOrder(request, env);
+    }
+
+    if (url.pathname === '/api/shopify/sync-product') {
+      return handleShopifySyncProduct(request, env);
+    }
+
+    if (url.pathname === '/api/shopify/delete-product') {
+      return handleShopifyDeleteProduct(request, env);
     }
 
     return env.ASSETS.fetch(request);

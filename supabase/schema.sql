@@ -23,6 +23,12 @@ create table if not exists products (
 -- created above with the column already.
 alter table products add column if not exists stock integer;
 
+-- Shopify linkage — nullable, populated by the Worker after the admin panel
+-- syncs a product. shopify_variant_ids maps each size to its Shopify
+-- variant/inventory item id, e.g. {"M": {"variant_id": 123, "inventory_item_id": 456}}.
+alter table products add column if not exists shopify_product_id text;
+alter table products add column if not exists shopify_variant_ids jsonb not null default '{}';
+
 create table if not exists site_content (
   key text primary key,
   value text not null default '',
@@ -67,6 +73,10 @@ create table if not exists orders (
   payment_status text not null default 'pending' check (payment_status in ('pending', 'paid', 'failed', 'cancelled')),
   created_at timestamptz not null default now()
 );
+
+-- Shopify linkage — set once the Worker creates the matching draft order,
+-- then reused so a retried checkout/webhook never creates a duplicate.
+alter table orders add column if not exists shopify_draft_order_id text;
 
 -- Widen the status check for tables created before "cancelled" existed —
 -- harmless no-op if the table was just created above with it already.

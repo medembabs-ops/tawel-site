@@ -365,6 +365,33 @@ function isSoldOut(product) {
   return product.stock !== null && product.stock !== undefined && Number(product.stock) <= 0;
 }
 
+// Best-effort Shopify mirror — Supabase is always the source of truth, so a
+// failure here is surfaced but never blocks or reverts the Supabase save.
+async function shopifySyncProduct(productId) {
+  const { data } = await supabaseClient.auth.getSession();
+  if (!data.session) return { error: 'Not logged in.' };
+  const res = await fetch('/api/shopify/sync-product', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session.access_token}` },
+    body: JSON.stringify({ productId }),
+  });
+  const body = await res.json().catch(() => ({}));
+  return res.ok ? {} : { error: body.error || `Shopify sync failed (${res.status}).` };
+}
+
+async function shopifyDeleteProduct(shopifyProductId) {
+  if (!shopifyProductId) return {};
+  const { data } = await supabaseClient.auth.getSession();
+  if (!data.session) return { error: 'Not logged in.' };
+  const res = await fetch('/api/shopify/delete-product', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session.access_token}` },
+    body: JSON.stringify({ shopifyProductId }),
+  });
+  const body = await res.json().catch(() => ({}));
+  return res.ok ? {} : { error: body.error || `Shopify delete failed (${res.status}).` };
+}
+
 function productCardHtml(product) {
   const isNew = !product.id;
   return `
@@ -595,10 +622,16 @@ productsList.addEventListener('click', async (e) => {
       ? await supabaseClient.from('products').insert({ id, ...fields, image })
       : await supabaseClient.from('products').update({ ...fields, image }).eq('id', existingId);
 
-    productsStatus.textContent = error
-      ? `Save failed: ${error.message}${isNew ? ' — try a different name, that id may already exist.' : ''}`
+    if (error) {
+      productsStatus.textContent = `Save failed: ${error.message}${isNew ? ' — try a different name, that id may already exist.' : ''}`;
+      return;
+    }
+
+    const { error: shopifyError } = await shopifySyncProduct(id);
+    productsStatus.textContent = shopifyError
+      ? `Saved "${fields.name}", but Shopify sync failed: ${shopifyError}`
       : `Saved "${fields.name}".`;
-    if (!error) await loadProductsPanel();
+    await loadProductsPanel();
   }
 
   if (action === 'delete') {
@@ -612,9 +645,18 @@ productsList.addEventListener('click', async (e) => {
       e.target.setAttribute('data-confirm', 'true');
       return;
     }
+    const existingProduct = products.find((p) => p.id === existingId);
     const { error } = await supabaseClient.from('products').delete().eq('id', existingId);
-    productsStatus.textContent = error ? `Delete failed: ${error.message}` : 'Product deleted.';
-    if (!error) await loadProductsPanel();
+    if (error) {
+      productsStatus.textContent = `Delete failed: ${error.message}`;
+      return;
+    }
+
+    const { error: shopifyError } = await shopifyDeleteProduct(existingProduct?.shopify_product_id);
+    productsStatus.textContent = shopifyError
+      ? `Product deleted, but Shopify cleanup failed: ${shopifyError}`
+      : 'Product deleted.';
+    await loadProductsPanel();
   }
 });
 

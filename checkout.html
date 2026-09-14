@@ -162,6 +162,15 @@
         return;
       }
 
+      // Mirror the order into Shopify as a draft order. Best-effort and
+      // non-blocking — Shopify being unreachable must never stop a real
+      // customer from paying via Paystack.
+      fetch('/api/shopify/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reference }),
+      }).catch(() => {});
+
       let initRes;
       try {
         initRes = await fetch('/api/paystack/initialize', {
